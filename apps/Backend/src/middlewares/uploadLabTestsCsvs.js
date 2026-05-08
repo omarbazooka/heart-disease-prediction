@@ -1,7 +1,25 @@
+
 const path = require("path");
 const multer = require("multer");
 
 const storage = multer.memoryStorage();
+
+const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
+
+const uploadDir = path.join(__dirname, "..", "..", "uploads", "labtests");
+fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const safeOriginal = String(file.originalname || "file.csv").replace(/[^\w.\-]+/g, "_");
+    const stamp = `${Date.now()}_${Math.round(Math.random() * 1e9)}`;
+    cb(null, `${stamp}_${safeOriginal}`);
+  },
+});
+
 
 const csvOnly = (req, file, cb) => {
   const ext = path.extname(file.originalname || "").toLowerCase();
@@ -34,5 +52,9 @@ const uploadLabTestCsv = multer({
   { name: "files", maxCount: 1 },
 ]);
 
+
 module.exports = { uploadLabTestsCsvs, uploadLabTestCsv };
+
+module.exports = { uploadLabTestsCsvs, uploadLabTestCsv, uploadDir };
+
 

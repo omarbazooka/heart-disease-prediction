@@ -1,3 +1,4 @@
+
 Lab portal CSV upload (Postman / lab operations — no patient JWT):
 POST {{base_url}}/api/lab-portal/upload-csvs
 Header: x-lab-key: <LAB_API_KEY from Backend .env>
@@ -20,3 +21,15 @@ Patient self-upload (frontend):
 POST {{base_url}}/api/labtests/upload-csv
 Header: Authorization: Bearer <patient token>
 CSV national_id must match the logged-in patient.
+
+Put these 5 CSV files in Postman request:
+POST {{base_url}}/api/labtests/upload-csvs
+
+Body -> form-data:
+- key: files (type: File) -> select each CSV (5 times)
+
+Rules:
+- Exactly 5 CSV files
+- 1 CSV per user (unique national_id)
+- lab_code must be only AL Borg Labs or Al Mokhtabar labs and MUST match lab_id's lab_code in DB
+
