@@ -38,6 +38,7 @@ router.get("/", getLabTests);
 /* ---------------- AUTH USER ---------------- */
 router.get("/me/status", authenticate, getMyLabTestStatus);
 
+
 /* ---------------- PATIENT ROUTES ---------------- */
 router.get("/patient/:national_id/status", getLabTestStatusByNationalId);
 router.get("/patient/:national_id/latest", getLatestLabTestByNationalId);
@@ -47,6 +48,12 @@ router.get("/patient/:national_id", getLabTestsByNationalId);
 router.get("/lab/:lab_id", getLabTestsByLabId);
 
 /* ---------------- SINGLE RESOURCE (MUST BE LAST) ---------------- */
+
+// Static path prefixes before /:id so "patient" / "lab" are not treated as ids
+router.get("/patient/:national_id/status", getLabTestStatusByNationalId);
+router.get("/patient/:national_id/latest", getLatestLabTestByNationalId);
+router.get("/patient/:national_id", getLabTestsByNationalId);
+router.get("/lab/:lab_id", getLabTestsByLabId);
 router.get("/:id", getLabTestById);
 router.put("/:id", authenticate, validate(labTestUpdateSchema), updateLabTest);
 router.delete("/:id", authenticate, deleteLabTest);

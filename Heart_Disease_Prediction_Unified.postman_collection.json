@@ -1,13 +1,17 @@
 {
   "info": {
+
     "name": "Heart Disease Prediction - Unified API (Clean)",
     "_postman_id": "hd-prediction-api-2026-clean",
     "description": "Frontend-ready collection using Node Gateway (primary) + optional AI service (dev only).",
+
+    "name": "Heart Disease Prediction - Unified API (Simple)",
+    "_postman_id": "hd-prediction-api-2026-simple",
+    "description": "Frontend-ready minimal collection.\n\nSecurity: ML/SHAP/report are NOT exposed on FastAPI to browsers. Always call the Node backend; it talks to the internal AI service with X-INTERNAL-API-KEY.\n\nFlow:\n1) Auth → Register (any user)\n2) Auth → Login (saves token; clears labtest_id + prediction_id)\n3) Lab Tests → Upload CSV (current user) (saves labtest_id)\n4) Lab Tests → Get My Status (me)\n5) Predictions → Start Prediction (JWT) — uses latest lab test for your national_id; saves prediction_id\n6) Predictions → Get SHAP PNG / Get PDF Report (JWT, high-risk flow) — use prediction_id from step 5\n\nRules:\n- If Get My Status says hasLabTests=false ⇒ show Labs page\n- If prediction decision=low ⇒ show only decision + probability\n- If prediction decision=high ⇒ show hospitals + SHAP + report (when show_shap/show_report are true)\n\nBase URL: http://localhost:5000 (Node API gateway only).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base_url", "value": "http://localhost:5000", "type": "string" },
-    { "key": "ai_url", "value": "http://127.0.0.1:8000", "type": "string" },
     { "key": "token", "value": "", "type": "string" },
     { "key": "labtest_id", "value": "", "type": "string" },
     { "key": "prediction_id", "value": "", "type": "string" }
@@ -55,9 +59,16 @@
                   "const json = pm.response.json();",
                   "if (pm.response.code === 200 && json.token) {",
                   "  pm.environment.set('token', json.token);",
+                  "  pm.collectionVariables.set('token', json.token);",
                   "  pm.environment.set('labtest_id', '');",
+
                   "  pm.environment.set('prediction_id', '');",
                   "}"
+                  "  pm.collectionVariables.set('labtest_id', '');",
+                  "  pm.environment.set('prediction_id', '');",
+                  "  pm.collectionVariables.set('prediction_id', '');",
+                  "}",
+                  "console.log('Login response:', json);"
                 ]
               }
             }
@@ -137,6 +148,7 @@
       ]
     },
     {
+
       "name": "Predictions (Gateway - SAFE)",
       "item": [
         {
@@ -149,11 +161,45 @@
             "body": {
               "mode": "raw",
               "raw": "{}"
+
+      "name": "Predictions (Backend gateway)",
+      "description": "JWT required. Node calls internal FastAPI — do not hit :8000 /predict or /shap from the frontend.",
+      "item": [
+        {
+          "name": "Start Prediction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json.success && json.data && json.data.prediction_id) {",
+                  "  pm.environment.set('prediction_id', json.data.prediction_id);",
+                  "  pm.collectionVariables.set('prediction_id', json.data.prediction_id);",
+                  "  console.log('✅ prediction_id saved:', json.data.prediction_id);",
+                  "}",
+                  "console.log('Start prediction:', json);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{base_url}}/api/predictions/start",
               "host": ["{{base_url}}"],
               "path": ["api", "predictions", "start"]
+
             }
           }
         },
@@ -164,10 +210,21 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
+
+            },
+            "description": "Uses the latest LabTest row for the logged-in user's national_id. Response data includes prediction_id for SHAP/report."
+          }
+        },
+        {
+          "name": "Get SHAP (PNG)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": {
               "raw": "{{base_url}}/api/predictions/{{prediction_id}}/shap",
               "host": ["{{base_url}}"],
               "path": ["api", "predictions", "{{prediction_id}}", "shap"]
+
             }
           }
         },
@@ -178,10 +235,21 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
+
+            },
+            "description": "Returns image/png. prediction_id from Start Prediction (not labtest_id)."
+          }
+        },
+        {
+          "name": "Get Medical Report (PDF)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": {
               "raw": "{{base_url}}/api/predictions/{{prediction_id}}/report",
               "host": ["{{base_url}}"],
               "path": ["api", "predictions", "{{prediction_id}}", "report"]
+
             }
           }
         }
@@ -199,9 +267,14 @@
               "host": ["{{ai_url}}"],
               "path": ["predict", "{{labtest_id}}"]
             }
+
+            },
+            "description": "Returns application/pdf. Ownership enforced — only your prediction."
           }
         }
       ]
     }
   ]
+}
+
 }

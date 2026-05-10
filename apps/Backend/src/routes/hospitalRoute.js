@@ -19,8 +19,11 @@ router.get("/", getHospitals);
 // Static path before /:id so "area" is not captured as an id
 router.get("/area/:area", getHospitalsByArea);
 
+
 router.get("/:id", getHospitalById);
 
+
+router.get("/:id", getHospitalById);
 router.put("/:id", authenticate, requireAdminKey, validate(hospitalUpdateSchema), updateHospital);
 router.delete("/:id", authenticate, requireAdminKey, deleteHospital);
 

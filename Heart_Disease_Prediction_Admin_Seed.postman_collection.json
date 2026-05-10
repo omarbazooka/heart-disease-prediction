@@ -2,7 +2,10 @@
   "info": {
     "name": "Heart Disease Prediction - Admin & Seed",
     "_postman_id": "hd-prediction-api-2026-admin-seed",
+
     "description": "Seed & admin utilities for backend testing.\nBackend: http://localhost:5000",
+
+    "description": "Seed & admin utilities (not a public frontend flow).\n\n- Labs: create/list (JWT on POST)\n- Hospitals: create/update/delete need JWT + x-admin-key (see requireAdminKey / ADMIN_API_KEY in Backend .env)\n- Lab tests: bulk CSV upload (JWT)\n- Predictions: same gateway as production — POST /api/predictions/start, GET .../shap, GET .../report (JWT). Do not call FastAPI :8000 for /predict, /shap, /report from clients.\n\nBackend: http://localhost:5000",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -16,10 +19,29 @@
   ],
   "item": [
     {
-      "name": "Auth (admin)",
+      "name": "Auth",
       "item": [
         {
+
           "name": "Login (admin user)",
+
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 200 && json.token) {",
+                  "  pm.environment.set('token', json.token);",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "}",
+                  "console.log('Login response:', json);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -54,10 +76,28 @@
       ]
     },
     {
-      "name": "Labs (seed/admin)",
+      "name": "Labs (seed)",
       "item": [
         {
           "name": "Create Lab",
+
+
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json.data && json.data.id) {",
+                  "  pm.environment.set('lab_id', json.data.id);",
+                  "  pm.collectionVariables.set('lab_id', json.data.id);",
+                  "}",
+                  "console.log('Create lab:', json);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -107,10 +147,28 @@
       ]
     },
     {
-      "name": "Hospitals (seed/admin)",
+      "name": "Hospitals (seed)",
       "item": [
         {
+
           "name": "Create Hospital (admin key required)",
+
+          "name": "Create Hospital (x-admin-key)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json.data && json.data.id) {",
+                  "  pm.environment.set('hospital_id', json.data.id);",
+                  "  pm.collectionVariables.set('hospital_id', json.data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -161,7 +219,7 @@
       ]
     },
     {
-      "name": "LabTests (bulk/admin)",
+      "name": "LabTests (bulk)",
       "item": [
         {
           "name": "Upload CSV (bulk)",
@@ -225,6 +283,23 @@
       "item": [
         {
           "name": "Start Prediction",
+
+
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json.data && json.data.prediction_id) {",
+                  "  pm.environment.set('prediction_id', json.data.prediction_id);",
+                  "  pm.collectionVariables.set('prediction_id', json.data.prediction_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -233,6 +308,7 @@
             ],
             "body": {
               "mode": "raw",
+
               "raw": "{}"
             },
             "url": {
@@ -257,6 +333,36 @@
         },
         {
           "name": "Get SHAP",
+
+              "raw": "{}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/predictions/start", "host": ["{{base_url}}"], "path": ["api", "predictions", "start"] }
+          }
+        },
+        {
+          "name": "Get SHAP (PNG)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/predictions/{{prediction_id}}/shap", "host": ["{{base_url}}"], "path": ["api", "predictions", "{{prediction_id}}", "shap"] }
+          }
+        },
+        {
+          "name": "Get Report (PDF)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/predictions/{{prediction_id}}/report", "host": ["{{base_url}}"], "path": ["api", "predictions", "{{prediction_id}}", "report"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users (debug)",
+      "item": [
+        {
+          "name": "Get All Users",
           "request": {
             "method": "GET",
             "header": [
@@ -309,4 +415,5 @@
       ]
     }
   ]
+}
 }

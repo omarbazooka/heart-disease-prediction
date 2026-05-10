@@ -15,7 +15,10 @@ const globalErrorHandler = (err, req, res, next) => {
   if (handlePrismaError(err, res)) return;
 
   const statusCode = err.status || err.statusCode || 500;
+
   const message = statusCode >= 500 ? "Internal Server Error" : err.message || "Error";
+
+  const message = statusCode === 500 ? "Internal Server Error" : err.message || "Error";
 
   res.status(statusCode).json({
     success: false,

@@ -45,6 +45,7 @@ class PredictionService {
     }
 
     const ai = await internalPredict(labTest.id.toString(), user.id.toString());
+    const ai = await internalPredict(labTest.id, user.id);
 
     await prisma.prediction.updateMany({
       where: { lab_test_id: labTest.id },
@@ -76,6 +77,7 @@ class PredictionService {
       err.statusCode = 400;
       throw err;
     }
+
     return internalShapPng(prediction.lab_test_id);
   }
 
