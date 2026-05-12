@@ -3,14 +3,15 @@ const { validate } = require("../middlewares/validate");
 const { labTestCreateSchema, labTestUpdateSchema } = require("../validators/labtest.schema");
 const { authenticate } = require("../middlewares/auth");
 
+
 const {
   uploadLabTestsCsvs: uploadMiddleware,
   uploadLabTestCsv: uploadSingleMiddleware,
 } = require("../middlewares/uploadLabTestsCsvs");
 
+const { uploadLabTestCsv: uploadSingleMiddleware } = require("../middlewares/uploadLabTestsCsvs");
 const {
   createLabTest,
-  uploadLabTestsCsvs,
   uploadLabTestCsvForUser,
   getLabTests,
   getLabTestById,
@@ -27,6 +28,7 @@ const router = express.Router();
 
 /* ---------------- CREATE ---------------- */
 router.post("/", authenticate, validate(labTestCreateSchema), createLabTest);
+
 
 /* ---------------- CSV UPLOADS ---------------- */
 router.post("/upload-csv", authenticate, uploadSingleMiddleware, uploadLabTestCsvForUser);

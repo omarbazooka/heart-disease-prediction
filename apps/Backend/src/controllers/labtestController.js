@@ -1,6 +1,8 @@
 const prisma = require("../config/prisma");
 const { handlePrismaError } = require("../middlewares/prismaErrors");
 
+
+
 const {
   LabCsvValidationError,
   labTestInclude,
@@ -8,16 +10,19 @@ const {
   processSingleCsvUpload,
 } = require("../services/labCsvIngestService");
 
+
 const fs = require("fs/promises");
 const path = require("path");
 const { parse } = require("csv-parse/sync");
 
 /* ---------------- HELPERS ---------------- */
 
+
 const flattenFeatures = (body) => {
   const { features, ...rest } = body;
   return { ...rest, ...(features || {}) };
 };
+
 
 const normalizeLabCode = (labCode) =>
   String(labCode || "").trim().toLowerCase();
@@ -40,6 +45,7 @@ const parseSingleRowCsv = (csvText) => {
 
 /* ---------------- CREATE ---------------- */
 
+
 const createLabTest = async (req, res, next) => {
   try {
     const data = flattenFeatures(req.body);
@@ -58,6 +64,7 @@ const createLabTest = async (req, res, next) => {
     next(err);
   }
 };
+
 
 /* ---------------- CSV: MULTIPLE ---------------- */
 
@@ -108,6 +115,7 @@ const uploadLabTestsCsvs = async (req, res, next) => {
 
 /* ---------------- CSV: SINGLE USER ---------------- */
 
+
 const uploadLabTestCsvForUser = async (req, res, next) => {
   try {
     if (!req.user?.national_id) {
@@ -116,6 +124,7 @@ const uploadLabTestCsvForUser = async (req, res, next) => {
         message: "Unauthorized",
       });
     }
+
 
     const file =
       req.file ||
@@ -133,6 +142,9 @@ const uploadLabTestCsvForUser = async (req, res, next) => {
 
     const created = await processSingleCsvUpload(file, {
       row,
+
+    const createdOne = await processSingleCsvUpload(file, {
+
       enforceNationalId: req.user.national_id,
       reqUser: req.user,
     });
@@ -149,6 +161,8 @@ const uploadLabTestCsvForUser = async (req, res, next) => {
         message: err.message,
       });
     }
+
+
 
     if (handlePrismaError(err, res)) return;
     next(err);
@@ -197,8 +211,59 @@ const getLabTestById = async (req, res, next) => {
       include: labTestInclude,
     });
 
+
     if (!labTest) {
       return res.status(404).json({ message: "Not found" });
+
+const getLabTestsByNationalId = async (req, res, next) => {
+  try {
+    const labTests = await prisma.labTest.findMany({
+      where: { national_id: req.params.national_id },
+      orderBy: { createdAt: "desc" },
+      include: labTestInclude,
+    });
+    res.json({ success: true, data: labTests.map(shapeLabTest) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getLatestLabTestByNationalId = async (req, res, next) => {
+  try {
+    const labTest = await prisma.labTest.findFirst({
+      where: { national_id: req.params.national_id },
+      orderBy: { createdAt: "desc" },
+      include: labTestInclude,
+    });
+    if (!labTest) return res.status(404).json({ success: false, message: "No lab tests found for this patient" });
+    res.json({ success: true, data: shapeLabTest(labTest) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getLabTestStatusByNationalId = async (req, res, next) => {
+  try {
+    const national_id = req.params.national_id;
+    const count = await prisma.labTest.count({ where: { national_id } });
+    res.json({
+      success: true,
+      data: {
+        national_id,
+        labTestsCount: count,
+        hasLabTests: count > 0,
+        recommendation: count > 0 ? "labtests" : "labs",
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const getMyLabTestStatus = async (req, res, next) => {
+  try {
+    if (!req.user?.national_id) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     res.json({ success: true, data: shapeLabTest(labTest) });
@@ -211,7 +276,6 @@ const getLabTestById = async (req, res, next) => {
 
 module.exports = {
   createLabTest,
-  uploadLabTestsCsvs,
   uploadLabTestCsvForUser,
   getLabTests,
   getLabTestById,

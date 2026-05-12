@@ -7,12 +7,13 @@
 
     "name": "Heart Disease Prediction - Unified API (Simple)",
     "_postman_id": "hd-prediction-api-2026-simple",
-    "description": "Frontend-ready minimal collection.\n\nSecurity: ML/SHAP/report are NOT exposed on FastAPI to browsers. Always call the Node backend; it talks to the internal AI service with X-INTERNAL-API-KEY.\n\nFlow:\n1) Auth → Register (any user)\n2) Auth → Login (saves token; clears labtest_id + prediction_id)\n3) Lab Tests → Upload CSV (current user) (saves labtest_id)\n4) Lab Tests → Get My Status (me)\n5) Predictions → Start Prediction (JWT) — uses latest lab test for your national_id; saves prediction_id\n6) Predictions → Get SHAP PNG / Get PDF Report (JWT, high-risk flow) — use prediction_id from step 5\n\nRules:\n- If Get My Status says hasLabTests=false ⇒ show Labs page\n- If prediction decision=low ⇒ show only decision + probability\n- If prediction decision=high ⇒ show hospitals + SHAP + report (when show_shap/show_report are true)\n\nBase URL: http://localhost:5000 (Node API gateway only).",
+    "description": "Frontend-ready minimal collection.\n\nSecurity: ML/SHAP/report are NOT exposed on FastAPI to browsers. Always call the Node backend; it talks to the internal AI service with X-INTERNAL-API-KEY.\n\nPatient flow:\n1) Auth → Register / Login (saves token)\n2) Lab Tests → Upload CSV (current user only) OR wait for lab portal ingest\n3) Lab Tests → Get My Status (me)\n4) Predictions → Start / SHAP / Report\n\nLab staff (Postman): use folder Lab Portal — POST /api/lab-portal/upload-csv or upload-csvs with x-lab-key only (no patient JWT). national_id in CSV is the patient (e.g. Omar while you are logged in as Youssef elsewhere).\n\nBase URL: http://localhost:5000 (Node API gateway only).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "base_url", "value": "http://localhost:5000", "type": "string" },
     { "key": "token", "value": "", "type": "string" },
+    { "key": "lab_key", "value": "admin-key-change-me", "type": "string" },
     { "key": "labtest_id", "value": "", "type": "string" },
     { "key": "prediction_id", "value": "", "type": "string" }
   ],
@@ -80,7 +81,26 @@
       "name": "Lab Tests",
       "item": [
         {
+
           "name": "Upload CSV (self)",
+          "name": "Upload CSV (current user)",
+          "description": "Patient self-upload only. CSV national_id must match the logged-in user. Lab staff: use Lab Portal folder instead.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json.created && json.created.id) {",
+                  "  pm.environment.set('labtest_id', json.created.id);",
+                  "  pm.collectionVariables.set('labtest_id', json.created.id);",
+                  "  console.log('✅ labtest_id saved:', json.created.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -116,7 +136,54 @@
       ]
     },
     {
+
       "name": "Labs",
+      "name": "Lab Portal (staff)",
+      "item": [
+        {
+          "name": "Upload CSV (any patient)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json.created && json.created.id) {",
+                  "  pm.environment.set('labtest_id', json.created.id);",
+                  "  pm.collectionVariables.set('labtest_id', json.created.id);",
+                  "  console.log('labtest_id saved:', json.created.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-lab-key", "value": "{{lab_key}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": [] }]
+            },
+            "url": { "raw": "{{base_url}}/api/lab-portal/upload-csv", "host": ["{{base_url}}"], "path": ["api", "lab-portal", "upload-csv"] }
+          }
+        },
+        {
+          "name": "Upload 1-5 CSVs (bulk)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-lab-key", "value": "{{lab_key}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "files", "type": "file", "src": [] }]
+            },
+            "url": { "raw": "{{base_url}}/api/lab-portal/upload-csvs", "host": ["{{base_url}}"], "path": ["api", "lab-portal", "upload-csvs"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Labs (read-only)",
       "item": [
         {
           "name": "Get All Labs",

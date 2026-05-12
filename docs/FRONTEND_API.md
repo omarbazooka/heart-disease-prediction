@@ -35,7 +35,7 @@
 - `password`: Minimum 6 characters.
 
 **Expected:** `201 Created` + JWT token
-=======
+
 # Heart Disease Prediction — Backend API (Frontend Integration)
 
 This document describes the **Node.js API** the frontend must use.  
@@ -99,7 +99,26 @@ Lists often include pagination:
 
 ```json
 {
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "id": "clx123...",
+    "national_id": "29501010001001",
+    "username": "ahmed",
+    "email": "ahmed@example.com",
+    "createdAt": "2026-05-12T10:00:00.000Z",
+    "updatedAt": "2026-05-12T10:00:00.000Z"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response `400` — Duplicate email or national ID:**
+
+```json
+{
   "success": false,
+
   "message": "Human readable message",
   "errors": [ ]
 }
@@ -110,10 +129,43 @@ In **development**, `errors` may include stack traces. In production, `errors` i
 ### 1.5 Validation errors (Zod)
 
 Status **400**:
+  "message": "User with this email or national ID already exists"
+}
+```
+
+## AUTH-2 · Login
+
+**POST** `/api/auth/login`
+
+```json
+{
+  "username": "ahmed",
+  "password": "SecurePassword123"
+}
+```
+
+**Expected:** `200 OK` + JWT token
+
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "id": "clx123...",
+    "national_id": "29501010001001",
+    "username": "ahmed",
+    "email": "ahmed@example.com"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response `401` — Invalid credentials:**
 
 ```json
 {
   "success": false,
+
   "error": "Validation failed",
   "details": [
     { "field": "body.email", "message": "…" }
@@ -218,6 +270,21 @@ Backend uses `cors` with `credentials: true`. Set `CORS_ORIGIN` on the server to
 
 # 🧠 Predictions Module
 
+  "message": "Invalid username or password"
+}
+```
+
+## Quick Reference Table (Auth)
+
+| # | Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- | --- |
+| 1 | `POST` | `/api/auth/register` | None | Register a new user |
+| 2 | `POST` | `/api/auth/login` | None | Login existing user |
+
+---
+
+# 🧠 Predictions Module
+
 `/api/predictions`
 
 > 💡 **How it works:**
@@ -231,7 +298,7 @@ Backend uses `cors` with `credentials: true`. Set `CORS_ORIGIN` on the server to
 **Body:** `{}` (Empty JSON object)
 
 **Expected:** `201 Created`
-=======
+
     "id": "clx…",
     "national_id": "29501010001001",
     "username": "ahmed",
@@ -273,7 +340,6 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
 **Body:** optional `{}` (no fields required).
 
 **201 example:**
->>>>>>> 0862b13b (Add internal AI gateway and prediction API)
 
 ```json
 {
@@ -287,6 +353,7 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
     "risk_level": "High Risk",
     "risk_color": "#ef4444",
     "decision_label": "High Heart Disease Risk Detected",
+
     "lab_test_id": "…",
     "decision": "high",
     "probability": 72.5,
@@ -545,7 +612,7 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
 ```json
 {
   "lab_id": "cuid-lab",
-=======
+
 For **low** risk, `show_shap`, `show_report`, and `show_hospitals` are typically **`false`** — UI can hide those sections.
 
 **404:** No lab test exists for this user’s national ID.
@@ -582,7 +649,6 @@ For **low** risk, `show_shap`, `show_report`, and `show_hospitals` are typically
 ```json
 {
   "lab_id": "<lab CUID>",
->>>>>>> 0862b13b (Add internal AI gateway and prediction API)
   "national_id": "29501010001001",
   "features": {
     "age": 55,
@@ -601,6 +667,7 @@ For **low** risk, `show_shap`, `show_report`, and `show_hospitals` are typically
 ```
 
 **Expected:** `201 Created`
+
 
 Feature constraints match Zod in `validators/labtest.schema.js` (ranges for age, BP, cholesterol, etc.).
 
@@ -667,7 +734,6 @@ Each file = one row, one patient. Used for batch/admin workflows.
 **Auth:** required.
 
 **200 example:**
->>>>>>> 0862b13b (Add internal AI gateway and prediction API)
 
 ```json
 {
@@ -697,10 +763,12 @@ Each file = one row, one patient. Used for batch/admin workflows.
       "oldpeak": 1.5,
       "st_slope": 1
     }
+
     "national_id": "29501010001001",
     "labTestsCount": 1,
     "hasLabTests": true,
     "recommendation": "labtests"
+
   }
 }
 ```
@@ -1082,6 +1150,7 @@ Each file = one row, one patient. Used for batch/admin workflows.
 | **AI Service** | ⚠️ | Never call `http://127.0.0.1:8000` (FastAPI) directly from the client. |
 | **HTTPS** | ✅ | Send JWT only over HTTPS in production. |
 | **Data Privacy** | ✅ | Treat `prediction_id` as sensitive; always use with the user’s own session. |
+
 | **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` responses (for example low-risk SHAP/report, wrong lab key, missing lab test, AI gateway failure). |
 =======
 If `hasLabTests` is `false`, `recommendation` is `"labs"` — UI can prompt user to pick a lab / upload flow.
@@ -1219,3 +1288,4 @@ All require **Bearer** token.
 ---
 
 *Generated for frontend integration. Backend version aligns with Express routes under `apps/Backend/src/routes/`.*
+| **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` responses (for example low-risk SHAP/report, wrong lab key, missing lab test, AI gateway failure). |
