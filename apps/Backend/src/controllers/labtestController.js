@@ -254,12 +254,27 @@ const getLabTestById = async (req, res, next) => {
   }
 };
 
+/** Include prediction summary for patient dashboards (no large binary fields). */
+const patientLabTestInclude = {
+  lab: true,
+  prediction: {
+    select: {
+      id: true,
+      prediction_percentage: true,
+      decision: true,
+      risk_level: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  },
+};
+
 const getLabTestsByNationalId = async (req, res, next) => {
   try {
     const labTests = await prisma.labTest.findMany({
       where: { national_id: req.params.national_id },
       orderBy: { createdAt: "desc" },
-      include: labTestInclude,
+      include: patientLabTestInclude,
     });
     res.json({ success: true, data: labTests.map(shapeLabTest) });
   } catch (err) {

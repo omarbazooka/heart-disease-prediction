@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import "../Pages/Have_no_risk.css";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   FaCheckCircle,

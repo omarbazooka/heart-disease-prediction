@@ -4,7 +4,7 @@ import axios from "axios";
 import "../Pages/Data_have_risk.css";
 import "../fontawesome-free-7.0.0-web/css/all.min.css";
 
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   FaMapMarkerAlt,

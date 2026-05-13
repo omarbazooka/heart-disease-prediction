@@ -4,7 +4,7 @@ import "./Login.css";
 import heartImg from "../../assets/heartLog.png";
 import logo from "../../assets/Logo.png";
 
-import { FaUser, FaLock, FaHospital, FaBarcode, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaUser, FaHospital, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 
 import axios from "axios";

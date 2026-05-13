@@ -97,7 +97,7 @@ export default function Navbar() {
                 onClick={() => navigate("/profile")}
                 className="custom-btn rounded-pill px-2"
               >
-                My Profile
+                My Dashboard
                 <img src={profile} className="profile" alt="profile" />
               </button>
 
