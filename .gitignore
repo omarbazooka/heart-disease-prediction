@@ -28,8 +28,10 @@ ENV/
 
 # OS files
 .DS_Store
+
 Thumbs.db
 
 Project/node_modules
 /images
 
+Thumbs.db
