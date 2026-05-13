@@ -63,5 +63,8 @@ def generate_medical_report_pdf(patient_data, risk_score, llm_report, images_bas
         browser.close()
 
 
+
+    # HTML → PDF via pdf_exporter (Playwright first, then WeasyPrint / xhtml2pdf / pdfkit).
+    pdf_bytes = html_to_pdf(html_out)
     pdf_file = io.BytesIO(pdf_bytes)
     return pdf_file

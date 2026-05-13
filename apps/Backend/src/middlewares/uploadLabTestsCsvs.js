@@ -21,6 +21,7 @@ const storage = multer.diskStorage({
 });
 
 
+
 const csvOnly = (req, file, cb) => {
   const ext = path.extname(file.originalname || "").toLowerCase();
   const mimetype = String(file.mimetype || "").toLowerCase();
@@ -57,4 +58,6 @@ module.exports = { uploadLabTestsCsvs, uploadLabTestCsv };
 
 module.exports = { uploadLabTestsCsvs, uploadLabTestCsv, uploadDir };
 
+
+module.exports = { uploadLabTestsCsvs, uploadLabTestCsv };
 

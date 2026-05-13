@@ -198,6 +198,7 @@ Backend uses `cors` with `credentials: true`. Set `CORS_ORIGIN` on the server to
 
 **201 example:**
 
+
 ```json
 {
   "success": true,
@@ -285,6 +286,7 @@ Backend uses `cors` with `credentials: true`. Set `CORS_ORIGIN` on the server to
 
 # 🧠 Predictions Module
 
+
 `/api/predictions`
 
 > 💡 **How it works:**
@@ -360,6 +362,7 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
     "risk_level": "…",
     "risk_color": "…",
     "decision_label": "…",
+
     "show_shap": true,
     "show_report": true,
     "show_hospitals": true
@@ -613,6 +616,7 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
 {
   "lab_id": "cuid-lab",
 
+
 For **low** risk, `show_shap`, `show_report`, and `show_hospitals` are typically **`false`** — UI can hide those sections.
 
 **404:** No lab test exists for this user’s national ID.
@@ -649,6 +653,7 @@ For **low** risk, `show_shap`, `show_report`, and `show_hospitals` are typically
 ```json
 {
   "lab_id": "<lab CUID>",
+
   "national_id": "29501010001001",
   "features": {
     "age": 55,
@@ -667,6 +672,7 @@ For **low** risk, `show_shap`, `show_report`, and `show_hospitals` are typically
 ```
 
 **Expected:** `201 Created`
+
 
 
 Feature constraints match Zod in `validators/labtest.schema.js` (ranges for age, BP, cholesterol, etc.).
@@ -764,10 +770,12 @@ Each file = one row, one patient. Used for batch/admin workflows.
       "st_slope": 1
     }
 
+
     "national_id": "29501010001001",
     "labTestsCount": 1,
     "hasLabTests": true,
     "recommendation": "labtests"
+
 
   }
 }
@@ -1151,8 +1159,9 @@ Each file = one row, one patient. Used for batch/admin workflows.
 | **HTTPS** | ✅ | Send JWT only over HTTPS in production. |
 | **Data Privacy** | ✅ | Treat `prediction_id` as sensitive; always use with the user’s own session. |
 
+
 | **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` responses (for example low-risk SHAP/report, wrong lab key, missing lab test, AI gateway failure). |
-=======
+
 If `hasLabTests` is `false`, `recommendation` is `"labs"` — UI can prompt user to pick a lab / upload flow.
 
 ---
@@ -1288,4 +1297,5 @@ All require **Bearer** token.
 ---
 
 *Generated for frontend integration. Backend version aligns with Express routes under `apps/Backend/src/routes/`.*
+| **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` responses (for example low-risk SHAP/report, wrong lab key, missing lab test, AI gateway failure). |
 | **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` responses (for example low-risk SHAP/report, wrong lab key, missing lab test, AI gateway failure). |

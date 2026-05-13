@@ -77,6 +77,7 @@ const Register = () => {
     if (!validate()) return;
     console.log("FORM DATA => ", form);
 
+
     try {
       setLoading(true);
 
@@ -145,6 +146,13 @@ const Register = () => {
               value={form.email}
               onChange={handleChange}
               error={errors.email}
+              icon={FaUser}
+              name="username"
+              type="text"
+              placeholder="Username"
+              value={form.username}
+              onChange={handleChange}
+              error={errors.username}
             />
 
             <Input
@@ -165,6 +173,13 @@ const Register = () => {
               value={form.username}
               onChange={handleChange}
               error={errors.username}
+              icon={FaEnvelope}
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              error={errors.email}
             />
 
             <Input

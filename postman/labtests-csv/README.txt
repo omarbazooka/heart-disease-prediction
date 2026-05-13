@@ -1,5 +1,6 @@
 
 
+
 Lab portal CSV upload (Postman / lab operations — no patient JWT):
 POST {{base_url}}/api/lab-portal/upload-csvs
 Header: x-lab-key: <LAB_API_KEY from Backend .env>
@@ -25,6 +26,7 @@ CSV national_id must match the logged-in patient.
 
 Put these 5 CSV files in Postman request:
 POST {{base_url}}/api/labtests/upload-csvs
+
 Lab portal CSV upload (Postman / lab operations — no patient JWT):
 POST {{base_url}}/api/lab-portal/upload-csvs
 Header: x-lab-key: <LAB_API_KEY from Backend .env>

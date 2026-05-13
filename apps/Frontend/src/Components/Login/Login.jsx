@@ -10,15 +10,19 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const Login = () => {
+
+
   const [form, setForm] = useState({
     username: "",
     password: "",
   });
 
   const [errors, setErrors] = useState({});
+
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
 
   const validate = (name, value) => {
     let error = "";
@@ -27,6 +31,21 @@ const Login = () => {
       if (!value.trim()) {
         error = "Username is required";
       } else if (value.length < 3) {
+
+  // ================= VALIDATION =================
+  const validate = (name, value) => {
+
+    let error = "";
+
+    // USERNAME
+    if (name === "username") {
+
+      if (!value.trim()) {
+
+        error = "Username is required";
+
+      } else if (value.length < 3) {
+
         error = "Username must be at least 3 characters";
       }
     }
@@ -36,6 +55,17 @@ const Login = () => {
         error = "Password is required";
       } else if (value.length < 6) {
         error = "Password must be at least 6 characters";
+    // PASSWORD
+    if (name === "password") {
+
+      if (!value.trim()) {
+
+        error = "Password is required";
+
+      } else if (value.length < 6) {
+
+        error =
+          "Password must be at least 6 characters";
       }
     }
 
@@ -43,6 +73,10 @@ const Login = () => {
   };
 
   const handleChange = (e) => {
+
+  // ================= HANDLE CHANGE =================
+  const handleChange = (e) => {
+
     const { name, value } = e.target;
 
     setForm((prev) => ({
@@ -66,6 +100,30 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
+    const error = validate(name, value);
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+  };
+
+  // ================= HANDLE BLUR =================
+  const handleBlur = (e) => {
+
+    const { name, value } = e.target;
+
+    const error = validate(name, value);
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+  };
+
+  // ================= LOGIN =================
+  const handleLogin = async () => {
+
     const usernameError = validate(
       "username",
       form.username
@@ -77,6 +135,7 @@ const Login = () => {
     );
 
     if (usernameError || passwordError) {
+
       setErrors({
         username: usernameError,
         password: passwordError,
@@ -86,6 +145,7 @@ const Login = () => {
     }
 
     try {
+
       setLoading(true);
 
       const res = await axios.post(
@@ -98,11 +158,19 @@ const Login = () => {
 
       alert("Login Successfully");
 
+      // ================= SUCCESS =================
+      alert("Login Successfully");
+
+      // ================= GET TOKEN =================
       const token =
         res.data.token ||
         res.data.data?.token;
 
       if (token) {
+
+      // ================= SAVE TOKEN =================
+      if (token) {
+
         localStorage.setItem(
           "token",
           token
@@ -137,6 +205,36 @@ const Login = () => {
       });
 
     } finally {
+      // ================= SAVE USER =================
+      localStorage.setItem(
+        "user",
+        JSON.stringify(
+          res.data.data || res.data.user
+        )
+      );
+
+      // ================= CLEAR ERRORS =================
+      setErrors({});
+
+      // ================= NAVIGATE =================
+      navigate("/the_general");
+
+    } catch (err) {
+
+      console.log(
+        "FULL ERROR => ",
+        err.response?.data
+      );
+
+      const backendError =
+        "Invalid username or password";
+
+      setErrors({
+        password: backendError,
+      });
+
+    } finally {
+
       setLoading(false);
     }
   };
@@ -151,6 +249,23 @@ const Login = () => {
             <h2>Login Page</h2>
 
             <div className="input-group">
+
+    <div className="login-container">
+
+      <div className="login-card">
+
+        {/* ================= LEFT SIDE ================= */}
+        <div className="login-left">
+
+          <div className="login-content">
+
+            <h2>
+              Login Page
+            </h2>
+
+            {/* ================= USERNAME ================= */}
+            <div className="input-group">
+
               <input
                 type="text"
                 name="username"
@@ -170,6 +285,18 @@ const Login = () => {
             </div>
 
             <div className="input-group">
+
+                <span className="error">
+                  {errors.username}
+                </span>
+
+              )}
+
+            </div>
+
+            {/* ================= PASSWORD ================= */}
+            <div className="input-group">
+
               <input
                 type="password"
                 name="password"
@@ -188,6 +315,16 @@ const Login = () => {
               )}
             </div>
 
+
+                <span className="error">
+                  {errors.password}
+                </span>
+
+              )}
+
+            </div>
+
+            {/* ================= BUTTON ================= */}
             <button
               className="btn-gradient"
               onClick={handleLogin}
@@ -217,6 +354,41 @@ const Login = () => {
           }}
         >
           <div className="logo-title-wrapper">
+
+              {loading
+                ? "Logging in..."
+                : "Log In"}
+
+            </button>
+
+            {/* ================= REGISTER ================= */}
+            <div className="register-link">
+
+              Don't have an account?{" "}
+
+              <Link to="/register">
+                Register Now
+              </Link>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* ================= RIGHT SIDE ================= */}
+        <div
+          className="login-right"
+          style={{
+            backgroundImage: `linear-gradient(
+              rgba(0,0,0,0.25),
+              rgba(0,0,0,0.25)
+            ), url(${heartImg})`,
+          }}
+        >
+
+          <div className="logo-title-wrapper">
+
             <img
               src={logo}
               className="logo"
@@ -230,6 +402,13 @@ const Login = () => {
         </div>
 
       </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 };

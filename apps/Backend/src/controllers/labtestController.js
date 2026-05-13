@@ -3,6 +3,8 @@ const { handlePrismaError } = require("../middlewares/prismaErrors");
 
 
 
+
+
 const {
   LabCsvValidationError,
   labTestInclude,
@@ -18,10 +20,12 @@ const { parse } = require("csv-parse/sync");
 /* ---------------- HELPERS ---------------- */
 
 
+
 const flattenFeatures = (body) => {
   const { features, ...rest } = body;
   return { ...rest, ...(features || {}) };
 };
+
 
 
 const normalizeLabCode = (labCode) =>
@@ -50,15 +54,21 @@ const createLabTest = async (req, res, next) => {
   try {
     const data = flattenFeatures(req.body);
 
+
+const createLabTest = async (req, res, next) => {
+  try {
+    const data = flattenFeatures(req.body);
     const labTest = await prisma.labTest.create({
       data,
       include: labTestInclude,
     });
 
+
     res.status(201).json({
       success: true,
       data: shapeLabTest(labTest),
     });
+    res.status(201).json({ success: true, data: shapeLabTest(labTest) });
   } catch (err) {
     if (handlePrismaError(err, res)) return;
     next(err);
@@ -145,6 +155,24 @@ const uploadLabTestCsvForUser = async (req, res, next) => {
 
     const createdOne = await processSingleCsvUpload(file, {
 
+const uploadLabTestCsvForUser = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+    const fileFromFields =
+      (req.files && Array.isArray(req.files.file) && req.files.file[0]) ||
+      (req.files && Array.isArray(req.files.files) && req.files.files[0]) ||
+      null;
+    const file = req.file || fileFromFields;
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: "CSV file is required (form-data key: file)",
+      });
+    }
+
+    const createdOne = await processSingleCsvUpload(file, {
       enforceNationalId: req.user.national_id,
       reqUser: req.user,
     });
@@ -153,6 +181,8 @@ const uploadLabTestCsvForUser = async (req, res, next) => {
       success: true,
       message: "CSV processed",
       created,
+      message: "Lab test CSV processed for current user",
+      created: createdOne,
     });
   } catch (err) {
     if (err instanceof LabCsvValidationError) {
@@ -178,6 +208,7 @@ const getLabTests = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const [total, data] = await Promise.all([
+    const [total, labTests] = await Promise.all([
       prisma.labTest.count(),
       prisma.labTest.findMany({
         skip,
@@ -196,6 +227,8 @@ const getLabTests = async (req, res, next) => {
         total,
         totalPages: Math.ceil(total / limit),
       },
+      data: labTests.map(shapeLabTest),
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (err) {
     next(err);
@@ -214,6 +247,12 @@ const getLabTestById = async (req, res, next) => {
 
     if (!labTest) {
       return res.status(404).json({ message: "Not found" });
+    if (!labTest) return res.status(404).json({ success: false, message: "Lab test not found" });
+    res.json({ success: true, data: shapeLabTest(labTest) });
+  } catch (err) {
+    next(err);
+  }
+};
 
 const getLabTestsByNationalId = async (req, res, next) => {
   try {
@@ -267,16 +306,76 @@ const getMyLabTestStatus = async (req, res, next) => {
     }
 
     res.json({ success: true, data: shapeLabTest(labTest) });
+    const national_id = String(req.user.national_id);
+    const count = await prisma.labTest.count({ where: { national_id } });
+    res.json({
+      success: true,
+      data: {
+        national_id,
+        labTestsCount: count,
+        hasLabTests: count > 0,
+        recommendation: count > 0 ? "labtests" : "labs",
+      },
+    });
   } catch (err) {
     next(err);
   }
 };
 
+
 /* ---------------- EXPORTS ---------------- */
+
+const getLabTestsByLabId = async (req, res, next) => {
+  try {
+    const labTests = await prisma.labTest.findMany({
+      where: { lab_id: req.params.lab_id },
+      orderBy: { createdAt: "desc" },
+      include: labTestInclude,
+    });
+    res.json({ success: true, data: labTests.map(shapeLabTest) });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const updateLabTest = async (req, res, next) => {
+  try {
+    const data = flattenFeatures(req.body);
+    const labTest = await prisma.labTest.update({
+      where: { id: req.params.id },
+      data,
+      include: labTestInclude,
+    });
+    res.json({ success: true, data: shapeLabTest(labTest) });
+  } catch (err) {
+    if (handlePrismaError(err, res)) return;
+    next(err);
+  }
+};
+
+const deleteLabTest = async (req, res, next) => {
+  try {
+    await prisma.labTest.delete({ where: { id: req.params.id } });
+    res.json({ success: true, message: "Lab test deleted successfully" });
+  } catch (err) {
+    if (handlePrismaError(err, res)) return;
+    next(err);
+  }
+};
 
 module.exports = {
   createLabTest,
   uploadLabTestCsvForUser,
   getLabTests,
   getLabTestById,
+
 };
+  getLabTestsByNationalId,
+  getLatestLabTestByNationalId,
+  getLabTestStatusByNationalId,
+  getMyLabTestStatus,
+  getLabTestsByLabId,
+  updateLabTest,
+  deleteLabTest,
+};
+

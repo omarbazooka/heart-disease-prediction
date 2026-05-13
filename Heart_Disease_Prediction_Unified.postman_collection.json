@@ -1,9 +1,11 @@
 {
   "info": {
 
+
     "name": "Heart Disease Prediction - Unified API (Clean)",
     "_postman_id": "hd-prediction-api-2026-clean",
     "description": "Frontend-ready collection using Node Gateway (primary) + optional AI service (dev only).",
+
 
     "name": "Heart Disease Prediction - Unified API (Simple)",
     "_postman_id": "hd-prediction-api-2026-simple",
@@ -22,7 +24,10 @@
       "name": "Auth",
       "item": [
         {
+
           "name": "Register",
+
+          "name": "Register (any user)",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -52,10 +57,20 @@
               "path": ["api", "auth", "login"]
             }
           },
+              "raw": "{\n  \"national_id\": \"\",\n  \"username\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Login (any user)",
           "event": [
             {
               "listen": "test",
               "script": {
+
+                "type": "text/javascript",
                 "exec": [
                   "const json = pm.response.json();",
                   "if (pm.response.code === 200 && json.token) {",
@@ -63,8 +78,10 @@
                   "  pm.collectionVariables.set('token', json.token);",
                   "  pm.environment.set('labtest_id', '');",
 
+
                   "  pm.environment.set('prediction_id', '');",
                   "}"
+
                   "  pm.collectionVariables.set('labtest_id', '');",
                   "  pm.environment.set('prediction_id', '');",
                   "  pm.collectionVariables.set('prediction_id', '');",
@@ -73,7 +90,20 @@
                 ]
               }
             }
+
           ]
+
+          ,
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"\",\n  \"password\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] }
+          }
         }
       ]
     },
@@ -82,7 +112,9 @@
       "item": [
         {
 
+
           "name": "Upload CSV (self)",
+
           "name": "Upload CSV (current user)",
           "description": "Patient self-upload only. CSV national_id must match the logged-in user. Lab staff: use Lab Portal folder instead.",
           "event": [
@@ -103,6 +135,7 @@
           ],
           "request": {
             "method": "POST",
+
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
@@ -131,13 +164,29 @@
               "host": ["{{base_url}}"],
               "path": ["api", "labtests", "me", "status"]
             }
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": [] }]
+            },
+            "url": { "raw": "{{base_url}}/api/labtests/upload-csv", "host": ["{{base_url}}"], "path": ["api", "labtests", "upload-csv"] }
+          }
+        },
+        {
+          "name": "Get My Status (me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/labtests/me/status", "host": ["{{base_url}}"], "path": ["api", "labtests", "me", "status"] }
           }
         }
       ]
     },
     {
 
+
       "name": "Labs",
+
       "name": "Lab Portal (staff)",
       "item": [
         {
@@ -189,32 +238,79 @@
           "name": "Get All Labs",
           "request": {
             "method": "GET",
+
             "url": {
               "raw": "{{base_url}}/api/labs?page=1&limit=50",
               "host": ["{{base_url}}"],
               "path": ["api", "labs"]
             }
           }
+
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/labs?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "labs"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Lab by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/labs/{{lab_id}}", "host": ["{{base_url}}"], "path": ["api", "labs", "{{lab_id}}"] }
+          }
         }
       ]
     },
     {
+
       "name": "Hospitals",
+
+      "name": "Hospitals (read-only)",
+
       "item": [
         {
           "name": "Get All Hospitals",
           "request": {
             "method": "GET",
+
             "url": {
               "raw": "{{base_url}}/api/hospitals?page=1&limit=50",
               "host": ["{{base_url}}"],
               "path": ["api", "hospitals"]
             }
           }
+
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hospitals?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api", "hospitals"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Hospitals by Area",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/hospitals/area/{{area}}", "host": ["{{base_url}}"], "path": ["api", "hospitals", "area", "{{area}}"] }
+          }
         }
       ]
     },
     {
+
 
       "name": "Predictions (Gateway - SAFE)",
       "item": [
@@ -228,6 +324,7 @@
             "body": {
               "mode": "raw",
               "raw": "{}"
+
 
       "name": "Predictions (Backend gateway)",
       "description": "JWT required. Node calls internal FastAPI — do not hit :8000 /predict or /shap from the frontend.",
@@ -267,6 +364,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "predictions", "start"]
 
+
             }
           }
         },
@@ -277,6 +375,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
+
 
             },
             "description": "Uses the latest LabTest row for the logged-in user's national_id. Response data includes prediction_id for SHAP/report."
@@ -292,6 +391,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "predictions", "{{prediction_id}}", "shap"]
 
+
             }
           }
         },
@@ -302,6 +402,7 @@
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
+
 
             },
             "description": "Returns image/png. prediction_id from Start Prediction (not labtest_id)."
@@ -316,6 +417,7 @@
               "raw": "{{base_url}}/api/predictions/{{prediction_id}}/report",
               "host": ["{{base_url}}"],
               "path": ["api", "predictions", "{{prediction_id}}", "report"]
+
 
             }
           }
@@ -335,6 +437,7 @@
               "path": ["predict", "{{labtest_id}}"]
             }
 
+
             },
             "description": "Returns application/pdf. Ownership enforced — only your prediction."
           }
@@ -345,3 +448,4 @@
 }
 
 }
+
