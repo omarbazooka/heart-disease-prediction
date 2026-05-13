@@ -161,6 +161,24 @@ body{
   font-size: 14px;
 }
 
+.toggle-visibility-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-visibility-btn:hover {
+  color: #1198B7;
+}
+
 /* ===== BUTTON ===== */
 
 .create-btn{

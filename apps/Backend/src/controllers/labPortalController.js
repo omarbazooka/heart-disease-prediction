@@ -14,7 +14,9 @@ const uploadLabTestsCsvs = async (req, res, next) => {
       });
     }
 
-    const { created, failures } = await processBulkCsvUpload(files);
+    const expectedLabId = req.headers["x-lab-id"] || null;
+
+    const { created, failures } = await processBulkCsvUpload(files, { expectedLabId });
 
     if (created.length === 0) {
       return res.status(400).json({
@@ -51,7 +53,9 @@ const uploadLabTestCsv = async (req, res, next) => {
       });
     }
 
-    const created = await processSingleCsvUpload(file);
+    const expectedLabId = req.headers["x-lab-id"] || null;
+
+    const created = await processSingleCsvUpload(file, { expectedLabId });
 
     return res.status(201).json({
       success: true,

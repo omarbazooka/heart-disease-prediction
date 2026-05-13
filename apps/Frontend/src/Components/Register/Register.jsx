@@ -5,7 +5,7 @@ import "./Register.css";
 import heartImg from "../../assets/heart.png";
 import logo from "../../assets/Logo.png";
 
-import { FaUser, FaEnvelope, FaLock, FaIdCard } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaLock, FaIdCard, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 
 // ===== INPUT COMPONENT =====
@@ -17,6 +17,9 @@ const Input = ({
   value,
   onChange,
   error,
+  isPassword,
+  showPassword,
+  togglePassword,
 }) => (
   <div className="input-wrapper">
     <div className={`input-group ${error ? "error-border" : ""}`}>
@@ -27,7 +30,17 @@ const Input = ({
         value={value}
         onChange={onChange}
       />
-      <Icon className="input-icon" />
+      {isPassword ? (
+        <button 
+          type="button" 
+          className="toggle-visibility-btn"
+          onClick={togglePassword}
+        >
+          {showPassword ? <FaEyeSlash /> : <FaEye />}
+        </button>
+      ) : (
+        <Icon className="input-icon" />
+      )}
     </div>
     {error && <span className="error-text">{error}</span>}
   </div>
@@ -43,6 +56,7 @@ const Register = () => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -185,11 +199,14 @@ const Register = () => {
             <Input
               icon={FaLock}
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
               value={form.password}
               onChange={handleChange}
               error={errors.password}
+              isPassword={true}
+              showPassword={showPassword}
+              togglePassword={() => setShowPassword(!showPassword)}
             />
 
             <button

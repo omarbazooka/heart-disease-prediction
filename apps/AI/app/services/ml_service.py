@@ -127,7 +127,7 @@ class MLService:
         plt.barh(shap_df["feature"], shap_df["importance"])
         plt.gca().invert_yaxis()
         plt.title("Feature Importance (SHAP)")
-        plt.xlabel("Importance")
+        plt.xlabel("Feature Importance")
 
         buf = io.BytesIO()
         plt.savefig(buf, format="png", bbox_inches="tight")

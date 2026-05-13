@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Navbar from "./Components/Navbar/Navbar";
 import Footer from "./Components/Footer/Footer";
 
-import Home from "./Pages/Home";
+import Heart from "./Pages/Home";
 import TheGeneralHome from "./Pages/The_General_Home_Page";
 import HaveRisk from "./Pages/Data_have_risk";
 import HaveNoRisk from "./Pages/Have_no_risk";
@@ -14,6 +14,7 @@ import Register from "./Components/Register/Register";
 import Prediction from "./Components/Prediction/Prediction";
 import Learnmore from "./Components/Learnmore/Learnmore";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import LabPortal from "./Pages/LabPortal";
 
 import { AuthProvider } from "./Context/AuthContext";
 
@@ -22,12 +23,14 @@ export default function App() {
 
   const hideNavbar =
     location.pathname === "/login" ||
-    location.pathname === "/register";
+    location.pathname === "/register" ||
+    location.pathname === "/lab-portal";
 
   const hideFooter =
     location.pathname === "/login" ||
     location.pathname === "/register" ||
-    location.pathname === "/home";
+    location.pathname === "/heart" ||
+    location.pathname === "/lab-portal";
 
   return (
     <AuthProvider>
@@ -40,12 +43,14 @@ export default function App() {
         <div className="page-content">
           <Routes>
 
-  <Route path="/" element={<Navigate to="/home" />} />
+  <Route path="/" element={<Navigate to="/heart" />} />
 
   {/* PUBLIC ROUTES */}
-  <Route path="/home" element={<Home />} />
+  <Route path="/heart" element={<Heart />} />
+  <Route path="/home" element={<Navigate to="/the_general" />} />
   <Route path="/login" element={<Login />} />
   <Route path="/register" element={<Register />} />
+  <Route path="/lab-portal" element={<LabPortal />} />
 
   {/* PROTECTED ROUTES */}
   <Route

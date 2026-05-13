@@ -594,28 +594,91 @@ const Prediction = () => {
 
             ? "Your Lab Results Are Ready For Prediction"
 
-            : "You Should Go To Trusted Medical Labs So They Can Upload Your Results"}
+            : "You Should Go To Trusted Medical Labs So You Can Start Prediction"}
 
         </p>
 
         {/* ================= LABS SECTION ================= */}
-        <div className="labs-section">
+        {!hasLabTests && (
+          <div className="labs-section">
 
-          <div className="labs-top">
+            <div className="labs-top">
 
-            <div>
+              <div>
 
-              <h3 className="labs-title">
-                Trusted Medical Labs
-              </h3>
+                <h3 className="labs-title">
+                  Trusted Medical Labs
+                </h3>
+
 
               <p className="labs-sub">
                 There Is Thousands Of Trusted Medical Labs
               </p>
 
-                There Is Thousands Of Trusted Medical Labs
+                <p className="labs-sub">
 
-              </p>
+                  There Is Thousands Of Trusted Medical Labs
+
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* ================= DYNAMIC LABS ================= */}
+            <div className="labs-wrapper">
+
+              {labs.map((lab) => (
+
+                <a
+                  key={lab.id}
+
+                  href={
+                    userLocation
+
+                      ? `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(lab.address)}`
+
+                      : `https://www.google.com/maps/search/${encodeURIComponent(lab.address)}`
+                  }
+
+                  target="_blank"
+
+                  rel="noopener noreferrer"
+
+                  className="lab-card"
+                >
+
+                  <div className="lab-content">
+
+                    <div className="lab-title-row">
+
+                      <h4>
+                        {lab.name}
+                      </h4>
+
+                      <span className="rating-badge">
+                        Lab
+                      </span>
+
+                    </div>
+
+                    <div className="lab-info">
+
+                      <p>
+
+                        <BsGeoAltFill />
+
+                        {lab.address}
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                </a>
+
+              ))}
 
             </div>
 
@@ -692,6 +755,7 @@ const Prediction = () => {
           </div>
 
         </div>
+        )}
 
       </div>
 

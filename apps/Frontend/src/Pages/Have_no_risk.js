@@ -61,48 +61,8 @@ function Home() {
 
     <div className="home-page">
 
-      {/* ================= HERO SECTION ================= */}
-      <section className="hero text-center">
-
-        <h2 className="hero-title">
-          Heart Disease Prediction Tool
-        </h2>
-
-        <p className="hero-subtitle">
-          Advanced AI-Powered Analysis To Assess
-        </p>
-
-        <p className="hero-subtitle">
-          Your Heart Health Risk Factors
-        </p>
-
-        <div className="hero-buttons">
-
-          <Link to="/prediction">
-
-            <button className="btn custom-btn px-4 py-2 rounded-pill me-3">
-
-              Start Prediction →
-
-            </button>
-
-          </Link>
-
-          <Link
-            to="/learnmore"
-            className="btn learn btn-outline-dark rounded-pill"
-          >
-
-            Learn More →
-
-          </Link>
-
-        </div>
-
-      </section>
-
       {/* ================= RESULT SECTION ================= */}
-      <section className="result-section text-center">
+      <section className="result-section text-center" style={{ paddingTop: '80px' }}>
 
         <h3 className="title-result">
 

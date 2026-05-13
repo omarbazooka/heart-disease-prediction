@@ -98,22 +98,29 @@ nav li {
 .feature-card {
   background: #e8eff8;
   border: 1px solid var(--border-light);
-  border-radius: 16px;
+  border-radius: 20px;
   text-align: center;
   box-shadow: -12px 5px 5px 2px rgba(0, 0, 0, 0.3);
-  padding-top: 2%;
-  padding-bottom: 2%;
-  padding-left: 1%;
-  padding-right: 1%;
+  padding: 40px 25px;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-5px);
 }
 .icon {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 .iconn {
-  width: 10%;
+  width: 22%;
 }
 .image_iconn {
-  width: 15%;
+  width: 70%;
+  max-width: 80px;
 }
 .Title_card {
   background: linear-gradient(to right, #12535ecc 20%, rgb(120, 195, 216) 70%);
@@ -121,14 +128,18 @@ nav li {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  letter-spacing: 3%;
+  letter-spacing: 1px;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 15px;
 }
 .cap_Card {
   color: rgb(89, 119, 125);
-  padding: 0;
+  padding: 0 10px;
   margin: 0;
-  font-size: smaller;
+  font-size: 16px;
   font-weight: 500;
+  line-height: 1.6;
 }
 
 /* Footer */

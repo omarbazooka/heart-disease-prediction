@@ -21,7 +21,7 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.clear();
     setIsLogged(false);
-    navigate("/home");
+    navigate("/heart");
   };
 
   return (
@@ -52,7 +52,7 @@ export default function Navbar() {
         {/* Links */}
         <ul className="navbar-nav mx-auto text-center gap-lg-4">
           <li className="nav-item">
-            <Link className="nav-link" to="/home">HOME</Link>
+            <Link className="nav-link" to="/the_general">HOME</Link>
           </li>
           <li className="nav-item">
             <Link className="nav-link" to="/docs">DOCS</Link>

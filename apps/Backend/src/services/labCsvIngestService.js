@@ -64,7 +64,7 @@ const parseSingleRowCsv = (csvText) => {
   return records[0];
 };
 
-const createLabTestFromCsvRow = async ({ row, file, enforceNationalId, reqUser }) => {
+const createLabTestFromCsvRow = async ({ row, file, enforceNationalId, reqUser, expectedLabId }) => {
   const lab_id = String(row.lab_id || "").trim();
   const national_id = String(row.national_id || enforceNationalId || "").trim();
   const lab_code = normalizeLabCode(row.lab_code);
@@ -92,6 +92,12 @@ const createLabTestFromCsvRow = async ({ row, file, enforceNationalId, reqUser }
   if (!lab) throw new LabCsvValidationError("lab_id does not exist");
   if (String(lab.lab_code).trim() !== lab_code) {
     throw new LabCsvValidationError("lab_code does not match the lab_id in database");
+  }
+
+  if (expectedLabId && String(expectedLabId).trim() !== lab_id) {
+    throw new LabCsvValidationError(
+      "This CSV belongs to a different lab. You can only upload CSVs for your own lab."
+    );
   }
 
   const numeric = (key) =>
@@ -153,7 +159,10 @@ const createLabTestFromCsvRow = async ({ row, file, enforceNationalId, reqUser }
   };
 };
 
-const processBulkCsvUpload = async (files, { enforceNationalId = null, reqUser = null } = {}) => {
+const processBulkCsvUpload = async (
+  files,
+  { enforceNationalId = null, reqUser = null, expectedLabId = null } = {}
+) => {
   const created = [];
   const failures = [];
   const seenNationalIds = new Set();
@@ -173,6 +182,7 @@ const processBulkCsvUpload = async (files, { enforceNationalId = null, reqUser =
         file,
         enforceNationalId,
         reqUser,
+        expectedLabId,
       });
       seenNationalIds.add(createdOne.national_id);
       created.push(createdOne);
@@ -187,7 +197,10 @@ const processBulkCsvUpload = async (files, { enforceNationalId = null, reqUser =
   return { created, failures };
 };
 
-const processSingleCsvUpload = async (file, { enforceNationalId = null, reqUser = null } = {}) => {
+const processSingleCsvUpload = async (
+  file,
+  { enforceNationalId = null, reqUser = null, expectedLabId = null } = {}
+) => {
   const csvText = file.buffer.toString("utf8");
   const row = parseSingleRowCsv(csvText);
   return createLabTestFromCsvRow({
@@ -195,6 +208,7 @@ const processSingleCsvUpload = async (file, { enforceNationalId = null, reqUser 
     file,
     enforceNationalId,
     reqUser,
+    expectedLabId,
   });
 };
 

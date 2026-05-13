@@ -116,63 +116,25 @@ function Home() {
 
     try {
 
-      navigator.geolocation.getCurrentPosition(
-
-        async (position) => {
-
-          const lat =
-            position.coords.latitude;
-
-          const lon =
-            position.coords.longitude;
-
-          // ================= GET USER CITY =================
-          const geoRes = await axios.get(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-          );
-
-          let city =
-            geoRes.data.address.city ||
-            geoRes.data.address.state ||
-            geoRes.data.address.county ||
-            "Cairo";
-
-          // ================= NORMALIZE CITY =================
-          city = city.toLowerCase();
-
-          if (
-            city.includes("alex") ||
-            city.includes("الإسكندرية")
-          ) {
-
-            city = "Alexandria , Egypt";
-
-          } else {
-
-            city = "Cairo , Egypt";
-          }
-
-          // ================= GET HOSPITALS BY AREA =================
-          const hospitalsRes = await axios.get(
-            `http://localhost:5000/api/hospitals/area/${encodeURIComponent(city)}`
-          );
-
-          setHospitals(
-            hospitalsRes.data.data
-          );
-
-        },
-
-        (error) => {
-
-          console.log(error);
-
-          alert(
-            "Please Allow Location Access"
-          );
-
-        }
+      // ================= GET ALL HOSPITALS =================
+      const hospitalsRes = await axios.get(
+        `http://localhost:5000/api/hospitals?limit=100`
       );
+
+      const allHospitals = hospitalsRes.data.data;
+
+      // ================= GROUP BY AREA =================
+      const grouped = allHospitals.reduce((acc, hospital) => {
+        // Extract main city name (e.g., "Alexandria , Egypt" -> "Alexandria")
+        let areaName = hospital.area.split(",")[0].trim();
+        if (!acc[areaName]) {
+          acc[areaName] = [];
+        }
+        acc[areaName].push(hospital);
+        return acc;
+      }, {});
+
+      setHospitals(grouped);
 
     } catch (err) {
 
@@ -244,48 +206,8 @@ function Home() {
 
     <div className="home-page">
 
-      {/* HERO SECTION */}
-      <section className="hero text-center">
-
-        <h2 className="hero-title">
-          Heart Disease Prediction Tool
-        </h2>
-
-        <p className="hero-subtitle">
-          Advanced AI Powered Analysis
-        </p>
-
-        <p className="hero-subtitle">
-          To Assess Your Heart Health
-        </p>
-
-        <div className="hero-buttons">
-
-          <Link to="/prediction">
-
-            <button className="btn custom-btn px-4 py-2 rounded-pill me-3">
-
-              Start Prediction →
-
-            </button>
-
-          </Link>
-
-          <Link
-            to="/learnmore"
-            className="btn learn btn-outline-dark rounded-pill"
-          >
-
-            Learn More →
-
-          </Link>
-
-        </div>
-
-      </section>
-
       {/* RESULT SECTION */}
-      <section className="result-section text-center">
+      <section className="result-section text-center" style={{ paddingTop: '80px' }}>
 
         <h3 className="result-title">
 
@@ -331,9 +253,9 @@ function Home() {
 
             <div className="shap-container">
 
-              <h3 className="medical-report-title">
+              <h3 className="shap-title">
 
-                AI Explanation (SHAP)
+                The Most Effected Factor In The Result
 
               </h3>
 
@@ -382,60 +304,75 @@ function Home() {
 
           <h3 className="cap-effect">
 
-            You should go to one of these hospitals
-            that specialize in heart disease.
+            You Should Go To One Of These Hospitals
+            <br />
+            That Specialize In Heart Diseases.
 
           </h3>
 
-          <div className="hospitals-container">
+          <div className="hospitals-wrapper" style={{ textAlign: "left" }}>
 
-            {hospitals.length > 0 ? (
+            {Object.keys(hospitals).length > 0 ? (
 
-              hospitals.map((hospital) => {
+              Object.entries(hospitals).map(([area, areaHospitals]) => (
 
-                return (
+                <div key={area} className="area-group">
 
-                  <a
-                    key={hospital.id}
-                    href={hospital.google_maps_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hospital-card"
-                  >
+                  <div className="city-box">
+                    <h4 className="city-title">{area}</h4>
+                  </div>
 
-                    {/* HOSPITAL NAME */}
-                    <p className="hospital-name">
+                  <div className="hospitals-container">
 
-                      {hospital.name}
+                    {areaHospitals.map((hospital) => (
 
-                    </p>
+                      <a
+                        key={hospital.id}
+                        href={hospital.google_maps_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hospital-card"
+                      >
 
-                    {/* LOCATION */}
-                    <div className="location">
+                        {/* HOSPITAL NAME */}
+                        <p className="hospital-name">
 
-                      <FaMapMarkerAlt className="location_icon" />
+                          {hospital.name}
 
-                      <span className="location_name">
+                        </p>
 
-                        {hospital.area}
+                        {/* LOCATION */}
+                        <div className="location">
 
-                      </span>
+                          <FaMapMarkerAlt className="location_icon" />
 
-                    </div>
+                          <span className="location_name">
 
-                    {/* GOOGLE MAP */}
-                    <iframe
-                      title={hospital.name}
-                      src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                        hospital.name + " " + hospital.area
-                      )}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                      className="hospital-map"
-                      loading="lazy"
-                    ></iframe>
+                            {hospital.area}
 
-                  </a>
-                );
-              })
+                          </span>
+
+                        </div>
+
+                        {/* GOOGLE MAP */}
+                        <iframe
+                          title={hospital.name}
+                          src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                            hospital.name + " " + hospital.area
+                          )}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                          className="hospital-map"
+                          loading="lazy"
+                        ></iframe>
+
+                      </a>
+
+                    ))}
+
+                  </div>
+
+                </div>
+
+              ))
 
             ) : (
 

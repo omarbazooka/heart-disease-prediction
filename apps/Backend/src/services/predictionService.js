@@ -44,6 +44,7 @@ class PredictionService {
       throw err;
     }
 
+
     const ai = await internalPredict(labTest.id.toString(), user.id.toString());
 
     const ai = await internalPredict(labTest.id, user.id);
@@ -51,7 +52,42 @@ class PredictionService {
     await prisma.prediction.updateMany({
       where: { lab_test_id: labTest.id },
       data: { user_id: user.id },
+
+    // Check if prediction already exists for this lab test
+    let existingPrediction = await prisma.prediction.findUnique({
+      where: { lab_test_id: labTest.id }
     });
+
+    let ai;
+    if (existingPrediction) {
+      // Use existing prediction
+      const isHigh = String(existingPrediction.decision || "").toLowerCase() === "high";
+      ai = {
+        id: existingPrediction.id,
+        lab_test_id: existingPrediction.lab_test_id,
+        decision: existingPrediction.decision,
+        probability: existingPrediction.prediction_percentage,
+        risk_level: existingPrediction.risk_level,
+        risk_color: isHigh ? "#ef4444" : "#22c55e",
+        decision_label: isHigh ? "High Heart Disease Risk Detected" : "Low Heart Disease Risk",
+      };
+      
+      // Ensure user_id is set
+      if (existingPrediction.user_id !== user.id) {
+        await prisma.prediction.update({
+          where: { id: existingPrediction.id },
+          data: { user_id: user.id }
+        });
+      }
+    } else {
+      // Call AI service
+      ai = await internalPredict(labTest.id, user.id);
+
+      await prisma.prediction.updateMany({
+        where: { lab_test_id: labTest.id },
+        data: { user_id: user.id },
+      });
+    }
 
     const isHigh = String(ai.decision || "").toLowerCase() === "high";
     const probability =
