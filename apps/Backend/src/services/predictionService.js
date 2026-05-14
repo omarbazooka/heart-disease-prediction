@@ -44,7 +44,7 @@ class PredictionService {
       throw err;
     }
 
-    const ai = await internalPredict(labTest.id, user.id);
+    const ai = await internalPredict(labTest.id.toString(), user.id.toString());
 
     await prisma.prediction.updateMany({
       where: { lab_test_id: labTest.id },
