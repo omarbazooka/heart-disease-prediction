@@ -198,3 +198,124 @@ class HeartDiseaseConsultant:
                 "explanation":     f"Could not generate explanation: {str(e)}",
                 "recommendations": ["Please consult your physician for personalized recommendations."],
             }
+
+
+ECG_PROMPT_VERSION = "ecg_v1"
+
+
+class EcgMultiLabelReport(BaseModel):
+    interpretation: str = Field(
+        description="3-5 sentences: what the automated ECG findings may suggest, in probabilistic language"
+    )
+    urgency: str = Field(description="One short paragraph on how soon to seek medical advice (non-alarmist)")
+    follow_up: str = Field(description="Concrete follow-up steps (primary care, cardiology, ED if red flags)")
+    warning_signs: List[str] = Field(
+        description="3-6 bullet-style short strings of symptoms that should prompt urgent care"
+    )
+    recommendations: List[str] = Field(
+        description="5-7 lifestyle and medical adherence recommendations; no definitive diagnosis language"
+    )
+
+
+def build_ecg_prompt(top_5_lines: str, kb_context: str, primary_line: str) -> str:
+    return f"""
+You are an expert cardiologist assistant helping explain **automated multi-label ECG classifier output**.
+This is computer-aided analysis only — **not** a definitive diagnosis.
+
+Primary finding (highest model output):
+{primary_line}
+
+Top-5 model outputs (label, probability %):
+{top_5_lines}
+
+Reference context for the listed SCP-style codes (educational, for you — do not quote verbatim as patient diagnosis):
+{kb_context}
+
+Mandatory rules:
+1. Use probabilistic phrasing: "may suggest", "could be consistent with", "warrants correlation with", "is recommended".
+2. Never state the patient definitively "has" a disease based on this ECG alone.
+3. Mention that automated classifiers can be wrong and that electrode placement, artifact, and patient factors matter.
+4. Address urgency responsibly: chest pain, syncope, severe dyspnea → emergency care.
+5. Do not invent numeric probabilities beyond those given above.
+6. Keep tone calm, precise, and patient-friendly.
+
+Return ONLY valid JSON matching the schema instructions.
+"""
+
+
+class EcgConsultant:
+    """LLM layer for ECG multi-label interpretation."""
+
+    def __init__(self) -> None:
+        self.llm = ChatGroq(
+            temperature=0.0,
+            max_tokens=1200,
+            groq_api_key=os.getenv("GROQ_API_KEY"),
+            model="llama-3.3-70b-versatile",
+        )
+        self.output_parser = JsonOutputParser(pydantic_object=EcgMultiLabelReport)
+        system_msg = (
+            "You explain automated ECG classifier results responsibly. Output JSON only.\n"
+            "{format_instructions}"
+        )
+        self._prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_msg),
+                ("human", "{user_prompt}"),
+            ]
+        )
+        self._chain = self._prompt | self.llm | self.output_parser
+
+    def generate_ecg_report(self, top_5: list, kb_context: str) -> Dict[str, object]:
+        try:
+            primary = top_5[0] if top_5 else {}
+            primary_line = (
+                f"- {primary.get('label', primary.get('code', ''))}: {primary.get('probability', '')}%"
+                if primary
+                else "(none)"
+            )
+            top_5_lines = "\n".join(
+                f"- {x.get('label', x.get('code', '?'))}: {x.get('probability', '')}% (code {x.get('code', '')})"
+                for x in top_5[:5]
+            )
+            prompt_text = build_ecg_prompt(top_5_lines, kb_context, primary_line)
+            raw = self._chain.invoke(
+                {
+                    "user_prompt": prompt_text,
+                    "format_instructions": self.output_parser.get_format_instructions(),
+                }
+            )
+            interpretation = sanitize_llm_output(str(raw.get("interpretation", "")))
+            urgency = sanitize_llm_output(str(raw.get("urgency", "")))
+            follow_up = sanitize_llm_output(str(raw.get("follow_up", "")))
+            warning_signs = [sanitize_llm_output(str(w)) for w in raw.get("warning_signs", []) if str(w).strip()]
+            recommendations = [sanitize_llm_output(str(r)) for r in raw.get("recommendations", []) if str(r).strip()]
+            return {
+                "interpretation": interpretation,
+                "urgency": urgency,
+                "follow_up": follow_up,
+                "warning_signs": warning_signs,
+                "recommendations": recommendations,
+            }
+        except Exception as e:
+            return {
+                "interpretation": (
+                    "We could not generate an extended narrative interpretation. "
+                    f"Technical detail: {str(e)[:200]}"
+                ),
+                "urgency": "If you have chest pain, fainting, or severe shortness of breath, seek emergency care.",
+                "follow_up": "Share this automated ECG summary with your physician for clinical correlation.",
+                "warning_signs": [
+                    "Pressure-like chest pain",
+                    "Fainting or near-fainting",
+                    "Severe shortness of breath",
+                    "Rapid irregular heartbeat with symptoms",
+                ],
+                "recommendations": [
+                    "Follow heart-healthy diet guidance from your clinician.",
+                    "Stay physically active as approved by your physician.",
+                    "Avoid tobacco and limit alcohol per medical advice.",
+                    "Ensure blood pressure and glucose are managed if applicable.",
+                    "Discuss whether ambulatory monitoring is appropriate.",
+                ],
+            }

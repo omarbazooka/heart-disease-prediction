@@ -426,6 +426,10 @@ export default function PatientDashboard() {
   const [page, setPage] = useState(1);
 
   const [detailRow, setDetailRow] = useState(null);
+  const [dashboardTab, setDashboardTab] = useState("lab");
+  const [ecgTests, setEcgTests] = useState([]);
+  const [ecgStatus, setEcgStatus] = useState(null);
+  const [ecgDetailRow, setEcgDetailRow] = useState(null);
   const [hospitals, setHospitals] = useState([]);
 
   const [toasts, setToasts] = useState([]);
@@ -469,9 +473,28 @@ export default function PatientDashboard() {
     [pushToast]
   );
 
+  const fetchEcgDashboard = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!user?.national_id || !token) return;
+    try {
+      const [st, list] = await Promise.all([
+        axios.get(`${API}/ecg/me/status`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/ecg/me`, { params: { page: 1, limit: 50 }, headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      setEcgStatus(st.data.data);
+      setEcgTests(list.data.data || []);
+    } catch {
+      /* non-fatal */
+    }
+  }, [user?.national_id]);
+
   useEffect(() => {
     if (user?.national_id) fetchLabTests(user.national_id);
   }, [user, fetchLabTests]);
+
+  useEffect(() => {
+    if (user?.national_id) fetchEcgDashboard();
+  }, [user, fetchEcgDashboard]);
 
   const latestFeatures = labTests[0]?.features;
   const ageFromLab = latestFeatures?.age != null ? String(latestFeatures.age) : "—";
@@ -734,6 +757,36 @@ export default function PatientDashboard() {
       pushToast(err.response?.data?.message || "Update failed", "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const downloadEcgReport = async (row) => {
+    const id = row?.id;
+    if (!id) {
+      pushToast("No ECG test id.", "error");
+      return;
+    }
+    if (row.inference_status !== "ok") {
+      pushToast("ECG report is available after analysis completes.", "error");
+      return;
+    }
+    const token = localStorage.getItem("token");
+    try {
+      const res = await axios.get(`${API}/ecg/${id}/report`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.setAttribute("download", `ECG_Report_${id}.pdf`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      pushToast("ECG report download started.");
+    } catch {
+      pushToast("Could not download ECG report.", "error");
     }
   };
 
@@ -1034,10 +1087,30 @@ export default function PatientDashboard() {
 
         <div>
           <div className="pd-card">
-            <div className="pd-card-header">
-              <h2>Lab tests & predictions</h2>
+            <div className="pd-card-header" style={{ flexWrap: "wrap", gap: 12 }}>
+              <h2 style={{ margin: 0 }}>Tests & predictions</h2>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className={`pd-btn ${dashboardTab === "lab" ? "pd-btn-primary" : "pd-btn-ghost"}`}
+                  style={{ padding: "6px 14px", fontSize: 13 }}
+                  onClick={() => setDashboardTab("lab")}
+                >
+                  Lab tests
+                </button>
+                <button
+                  type="button"
+                  className={`pd-btn ${dashboardTab === "ecg" ? "pd-btn-primary" : "pd-btn-ghost"}`}
+                  style={{ padding: "6px 14px", fontSize: 13 }}
+                  onClick={() => setDashboardTab("ecg")}
+                >
+                  ECG tests
+                </button>
+              </div>
             </div>
             <div className="pd-card-body">
+              {dashboardTab === "lab" ? (
+              <>
               <div className="pd-toolbar">
                 <div>
                   <label htmlFor="pd-search">Search</label>
@@ -1189,6 +1262,65 @@ export default function PatientDashboard() {
                   </div>
                 </>
               )}
+              </>
+              ) : (
+                <div className="pd-table-wrap">
+                  {ecgTests.length === 0 ? (
+                    <div className="pd-empty">
+                      <strong>No ECG tests on file</strong>
+                      Ask your lab to upload WFDB .dat + .hea for your national ID.
+                    </div>
+                  ) : (
+                    <table className="pd-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>ECG test</th>
+                          <th>Status</th>
+                          <th>Diagnosis</th>
+                          <th>Probability</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ecgTests.map((row) => (
+                          <tr key={row.id}>
+                            <td>{new Date(row.createdAt).toLocaleString()}</td>
+                            <td style={{ fontFamily: "monospace", fontSize: 11 }}>{row.id}</td>
+                            <td>{row.inference_status}</td>
+                            <td>{row.primary_diagnosis || "—"}</td>
+                            <td>
+                              {row.primary_probability != null
+                                ? `${Number(row.primary_probability).toFixed(2)}%`
+                                : "—"}
+                            </td>
+                            <td>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                <button
+                                  type="button"
+                                  className="pd-btn pd-btn-ghost"
+                                  style={{ padding: "6px 10px", fontSize: 12 }}
+                                  onClick={() => setEcgDetailRow(row)}
+                                >
+                                  Details
+                                </button>
+                                <button
+                                  type="button"
+                                  className="pd-btn pd-btn-primary"
+                                  style={{ padding: "6px 10px", fontSize: 12 }}
+                                  onClick={() => downloadEcgReport(row)}
+                                >
+                                  <FaDownload /> PDF
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -1204,6 +1336,43 @@ export default function PatientDashboard() {
                 {overallTier === "low" && labTests.length > 0 && <li>Latest prediction is low risk — keep healthy habits.</li>}
                 <li>Retake a lab test periodically as advised by your physician.</li>
               </ul>
+            </div>
+          </div>
+
+          <div className="pd-card pd-chart-card" style={{ marginTop: 24 }}>
+            <div className="pd-card-header pd-chart-header">
+              <h2>
+                <FaHeartbeat style={{ marginRight: 8, color: "#cb2323" }} />
+                Latest ECG
+              </h2>
+            </div>
+            <div className="pd-card-body">
+              {!ecgStatus?.hasEcgTests ? (
+                <div className="pd-empty">
+                  <strong>You don&apos;t have any ECG test</strong>
+                </div>
+              ) : (
+                <>
+                  <p>
+                    <strong>Diagnosis:</strong> {ecgStatus.latestSummary?.primary_diagnosis || "—"}
+                  </p>
+                  <p>
+                    <strong>Probability:</strong>{" "}
+                    {ecgStatus.latestSummary?.primary_probability != null
+                      ? `${Number(ecgStatus.latestSummary.primary_probability).toFixed(2)}%`
+                      : "—"}
+                  </p>
+                  <p>
+                    <strong>Date:</strong>{" "}
+                    {ecgStatus.latestSummary?.createdAt
+                      ? new Date(ecgStatus.latestSummary.createdAt).toLocaleString()
+                      : "—"}
+                  </p>
+                  <p className="hint" style={{ marginTop: 8 }}>
+                    Status: {ecgStatus.latestSummary?.inference_status || "—"}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1243,6 +1412,42 @@ export default function PatientDashboard() {
               <p style={{ marginTop: 12, fontSize: 13, color: "var(--pd-muted)" }}>
                 SHAP explainability: open your latest <strong>high risk</strong> result page after running prediction to
                 view the full SHAP image from the server.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ecgDetailRow && (
+        <div
+          className="pd-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pd-ecg-modal-title"
+          onClick={(e) => e.target === e.currentTarget && setEcgDetailRow(null)}
+        >
+          <div className="pd-modal">
+            <div className="pd-modal-header">
+              <h3 id="pd-ecg-modal-title">ECG test details</h3>
+              <button type="button" className="pd-modal-close" onClick={() => setEcgDetailRow(null)} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <div className="pd-modal-body">
+              <p>
+                <strong>Lab:</strong> {ecgDetailRow.lab?.name || "—"}
+              </p>
+              <p>
+                <strong>Date:</strong> {new Date(ecgDetailRow.createdAt).toLocaleString()}
+              </p>
+              <p>
+                <strong>ECG test ID:</strong> {ecgDetailRow.id}
+              </p>
+              <p>
+                <strong>Status:</strong> {ecgDetailRow.inference_status}
+              </p>
+              <p>
+                <strong>Primary diagnosis:</strong> {ecgDetailRow.primary_diagnosis || "—"}
               </p>
             </div>
           </div>

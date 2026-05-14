@@ -64,6 +64,11 @@ function parseErrorPayload(data) {
     }
   }
   if (typeof data === "object") {
+    if (Array.isArray(data.detail)) {
+      return data.detail
+        .map((d) => (typeof d === "string" ? d : d.msg || d.loc?.join(".") || JSON.stringify(d)))
+        .join("; ");
+    }
     return data.message || data.detail || data.error || null;
   }
   return String(data);
@@ -112,9 +117,64 @@ async function internalReportPdf(labTestId) {
   return Buffer.from(res.data);
 }
 
+/**
+ * PTB-XL-style ECG inference + LLM (multipart .dat + .hea → FastAPI /internal/ecg/pipeline).
+ */
+async function internalEcgPipeline({ ecgTestId, datBuffer, heaBuffer }) {
+  if (!Buffer.isBuffer(datBuffer)) datBuffer = Buffer.from(datBuffer);
+  if (!Buffer.isBuffer(heaBuffer)) heaBuffer = Buffer.from(heaBuffer);
+  if (!ecgTestId || String(ecgTestId).trim() === "") {
+    throw new Error("ecg_test_id is required for ECG pipeline");
+  }
+
+  const fd = new FormData();
+  fd.append("ecg_test_id", String(ecgTestId).trim());
+  fd.append("dat_file", new Blob([datBuffer], { type: "application/octet-stream" }), "record.dat");
+  fd.append("hea_file", new Blob([heaBuffer], { type: "text/plain" }), "record.hea");
+
+  const res = await axios.post(`${baseURL}/internal/ecg/pipeline`, fd, {
+    headers: {
+      "X-INTERNAL-API-KEY": internalKey,
+    },
+    timeout: Number(process.env.AI_REQUEST_TIMEOUT_MS) || 120000,
+    validateStatus: () => true,
+  });
+  assertOk(res, "internal ecg pipeline");
+  return res.data;
+}
+
+/** PNG bar chart from top_5 JSON (FastAPI POST /internal/ecg/chart). */
+async function internalEcgChartFromTop5(top5, opts = {}) {
+  const res = await aiClient.post(
+    "/internal/ecg/chart",
+    { top_5: top5, compact: !!opts.compact },
+    {
+      responseType: "arraybuffer",
+      timeout: Number(process.env.AI_REQUEST_TIMEOUT_MS) || 120000,
+      validateStatus: () => true,
+    }
+  );
+  assertOk(res, "internal ecg chart");
+  return Buffer.from(res.data);
+}
+
+/** ECG medical PDF (FastAPI POST /internal/ecg/report). */
+async function internalEcgReportPdf(payload) {
+  const res = await aiClient.post("/internal/ecg/report", payload, {
+    responseType: "arraybuffer",
+    timeout: Number(process.env.AI_REQUEST_TIMEOUT_MS) || 120000,
+    validateStatus: () => true,
+  });
+  assertOk(res, "internal ecg report");
+  return Buffer.from(res.data);
+}
+
 module.exports = {
   aiClient,
   internalPredict,
   internalShapPng,
   internalReportPdf,
+  internalEcgPipeline,
+  internalEcgChartFromTop5,
+  internalEcgReportPdf,
 };

@@ -1,5 +1,9 @@
 const prisma = require("../config/prisma");
-const { internalPredict, internalShapPng, internalReportPdf } = require("../integrations/ai.service");
+const {
+  internalPredict,
+  internalShapPng,
+  internalReportPdf,
+} = require("../integrations/ai.service");
 
 class PredictionService {
   /**

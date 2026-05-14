@@ -10,6 +10,12 @@
   position: relative;
 }
 
+/* قسم ECG تحت خطوات التنبؤ — نفس الشكل مع تباعد أعلى أقل */
+.ecg-learnmore-section {
+  padding-top: 40px;
+  padding-bottom: 120px;
+}
+
 /* العنوان Responsive */
 .main-title {
   width: 100%;

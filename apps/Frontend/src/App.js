@@ -12,6 +12,7 @@ import Profile from "./Pages/Profile";
 import Login from "./Components/Login/Login";
 import Register from "./Components/Register/Register";
 import Prediction from "./Components/Prediction/Prediction";
+import EcgPrediction from "./Components/Ecg/EcgPrediction";
 import Learnmore from "./Components/Learnmore/Learnmore";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import LabPortal from "./Pages/LabPortal";
@@ -85,6 +86,15 @@ export default function App() {
     element={
       <ProtectedRoute>
         <Prediction />
+      </ProtectedRoute>
+    }
+  />
+
+  <Route
+    path="/ecg"
+    element={
+      <ProtectedRoute>
+        <EcgPrediction />
       </ProtectedRoute>
     }
   />

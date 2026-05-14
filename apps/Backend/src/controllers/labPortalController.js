@@ -3,6 +3,7 @@ const {
   processBulkCsvUpload,
   processSingleCsvUpload,
 } = require("../services/labCsvIngestService");
+const EcgService = require("../services/ecgService");
 
 const uploadLabTestsCsvs = async (req, res, next) => {
   try {
@@ -73,7 +74,41 @@ const uploadLabTestCsv = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /api/lab-portal/ecg — multipart dat_file, hea_file, national_id (form fields).
+ * Requires x-lab-id matching the lab that owns the upload.
+ */
+const uploadLabEcg = async (req, res, next) => {
+  try {
+    const expectedLabId = req.headers["x-lab-id"] || null;
+    if (!expectedLabId) {
+      return res.status(400).json({
+        success: false,
+        message: "x-lab-id header is required",
+      });
+    }
+    const dat = req.files?.dat_file?.[0];
+    const hea = req.files?.hea_file?.[0];
+    const national_id = req.body?.national_id;
+    const data = await EcgService.createLabPortalUpload({
+      expectedLabId,
+      national_id,
+      datFile: dat,
+      heaFile: hea,
+      client_request_id: req.body?.client_request_id,
+    });
+    return res.status(201).json({
+      success: true,
+      message: "ECG WFDB files stored",
+      data,
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
 module.exports = {
   uploadLabTestsCsvs,
   uploadLabTestCsv,
+  uploadLabEcg,
 };

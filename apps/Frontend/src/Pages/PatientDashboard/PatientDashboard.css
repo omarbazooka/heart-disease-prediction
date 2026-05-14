@@ -31,14 +31,15 @@
 .pd-header {
   max-width: 1280px;
   margin: 0 auto 24px;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
 }
 
 .pd-back {
+  grid-column: 1;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -59,9 +60,15 @@
   transform: translateY(-1px);
 }
 
+.pd-title-block {
+  grid-column: 2;
+  text-align: center;
+  min-width: 0;
+  max-width: min(100%, 42rem);
+}
+
 .pd-title-block h1 {
   margin: 0;
-  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
   font-weight: 800;
   letter-spacing: 0.04em;
   background: linear-gradient(90deg, #21444b 0%, var(--pd-primary) 100%);

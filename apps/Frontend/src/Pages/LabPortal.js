@@ -9,6 +9,11 @@ const LabPortal = () => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [ecgNationalId, setEcgNationalId] = useState("");
+  const [ecgDat, setEcgDat] = useState(null);
+  const [ecgHea, setEcgHea] = useState(null);
+  const [ecgUploading, setEcgUploading] = useState(false);
+  const [ecgResult, setEcgResult] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -139,6 +144,40 @@ const LabPortal = () => {
     navigate("/login");
   };
 
+  const handleEcgUpload = async () => {
+    if (!ecgNationalId.trim()) {
+      alert("Please enter the patient's national ID.");
+      return;
+    }
+    if (!ecgDat || !ecgHea) {
+      alert("Please select both .dat and .hea files.");
+      return;
+    }
+    try {
+      setEcgUploading(true);
+      setEcgResult(null);
+      const formData = new FormData();
+      formData.append("national_id", ecgNationalId.trim());
+      formData.append("dat_file", ecgDat);
+      formData.append("hea_file", ecgHea);
+      const res = await axios.post("http://localhost:5000/api/lab-portal/ecg", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "x-lab-key": "admin-key-change-me",
+          "x-lab-id": lab.id,
+        },
+      });
+      setEcgResult(res.data);
+      setEcgDat(null);
+      setEcgHea(null);
+    } catch (err) {
+      console.error(err);
+      setEcgResult(err.response?.data || { success: false, message: "ECG upload failed" });
+    } finally {
+      setEcgUploading(false);
+    }
+  };
+
   if (!lab) return null;
 
   return (
@@ -211,6 +250,69 @@ const LabPortal = () => {
                   ))}
                 </ul>
               </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="lab-portal-card" style={{ marginTop: 24 }}>
+        <h3 className="portal-title">ECG upload (WFDB)</h3>
+        <p className="portal-subtitle">
+          Upload paired <strong>.dat</strong> and <strong>.hea</strong> for a registered patient national ID.
+        </p>
+        <div style={{ marginBottom: 12 }}>
+          <label htmlFor="ecg-national-id" style={{ display: "block", marginBottom: 6 }}>
+            National ID
+          </label>
+          <input
+            id="ecg-national-id"
+            type="text"
+            value={ecgNationalId}
+            onChange={(e) => setEcgNationalId(e.target.value)}
+            placeholder="Patient national ID"
+            style={{ width: "100%", maxWidth: 360, padding: "8px 10px", borderRadius: 8, border: "1px solid #cbd5e1" }}
+          />
+        </div>
+        <div className="upload-area">
+          <input
+            type="file"
+            id="ecg-dat"
+            accept=".dat"
+            className="file-input-hidden"
+            onChange={(e) => setEcgDat(e.target.files?.[0] || null)}
+          />
+          <label htmlFor="ecg-dat" className="upload-label">
+            <FaUpload className="upload-icon" />
+            <span>{ecgDat ? ecgDat.name : "Select .dat file"}</span>
+          </label>
+        </div>
+        <div className="upload-area" style={{ marginTop: 10 }}>
+          <input
+            type="file"
+            id="ecg-hea"
+            accept=".hea"
+            className="file-input-hidden"
+            onChange={(e) => setEcgHea(e.target.files?.[0] || null)}
+          />
+          <label htmlFor="ecg-hea" className="upload-label">
+            <FaUpload className="upload-icon" />
+            <span>{ecgHea ? ecgHea.name : "Select .hea file"}</span>
+          </label>
+        </div>
+        <button
+          type="button"
+          className="btn-gradient btn-upload"
+          style={{ marginTop: 16, background: "#cb2323" }}
+          onClick={handleEcgUpload}
+          disabled={ecgUploading}
+        >
+          {ecgUploading ? "Uploading..." : "Upload ECG"}
+        </button>
+        {ecgResult && (
+          <div className={`result-box ${ecgResult.success ? "success" : "error"}`} style={{ marginTop: 16 }}>
+            <h4>{ecgResult.message || (ecgResult.success ? "OK" : "Error")}</h4>
+            {ecgResult.success && ecgResult.data?.ecg_test_id && (
+              <p className="success-text">ECG test ID: {ecgResult.data.ecg_test_id}</p>
             )}
           </div>
         )}

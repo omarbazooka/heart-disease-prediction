@@ -68,3 +68,49 @@ def generate_medical_report_pdf(patient_data, risk_score, llm_report, images_bas
     pdf_bytes = html_to_pdf(html_out)
     pdf_file = io.BytesIO(pdf_bytes)
     return pdf_file
+
+
+def generate_ecg_medical_report_pdf(
+    patient: dict,
+    lab: dict,
+    ecg_test: dict,
+    top_5: list,
+    llm_ecg_json: dict | None,
+    primary_diagnosis: str | None,
+    primary_probability: float | None,
+    confidence_label: str,
+):
+    """
+    ECG-specific medical PDF (no lab SHAP sections). Chart embedded as base64 PNG.
+    """
+    import base64
+
+    from services.chart_service import generate_ecg_top5_chart_png_bytes
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    templates_dir = os.path.join(os.path.dirname(current_dir), "templates")
+    env = Environment(loader=FileSystemLoader(templates_dir))
+    template = env.get_template("ecg_report_template.html")
+
+    chart_png = generate_ecg_top5_chart_png_bytes(top_5 or [], compact=True)
+    chart_data_uri = "data:image/png;base64," + base64.b64encode(chart_png).decode("utf-8")
+
+    current_date = datetime.now().strftime("%d %B %Y")
+    llm = llm_ecg_json or {}
+
+    html_out = template.render(
+        patient=patient,
+        lab=lab,
+        ecg_test=ecg_test,
+        top_5=top_5 or [],
+        llm=llm,
+        primary_diagnosis=primary_diagnosis or "—",
+        primary_probability=primary_probability,
+        confidence_label=confidence_label,
+        date=current_date,
+        chart_data_uri=chart_data_uri,
+    )
+    pdf_bytes = html_to_pdf(html_out)
+    out = io.BytesIO(pdf_bytes)
+    out.seek(0)
+    return out

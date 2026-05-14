@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ECG Analysis Report</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 24px; color: #1e293b; font-size: 12px; line-height: 1.45; }
+    h1 { font-size: 20px; color: #0f766e; margin-bottom: 4px; }
+    h2 { font-size: 14px; color: #0f766e; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; margin-top: 20px; }
+    .muted { color: #64748b; font-size: 11px; }
+    .box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin: 10px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+    th { background: #ecfeff; }
+    ul { margin: 6px 0 0 18px; }
+    .chart { max-width: 100%; height: auto; margin-top: 8px; }
+    .disclaimer { font-size: 10px; color: #64748b; margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>ECG computer-assisted analysis report</h1>
+  <p class="muted">Generated {{ date }} — This document summarizes automated classifier output. It is not a substitute for professional medical diagnosis.</p>
+
+  <h2>1. Patient &amp; lab information</h2>
+  <div class="box">
+    <p><strong>Patient:</strong> {{ patient.name }} &nbsp;|&nbsp; <strong>National ID:</strong> {{ patient.national_id }}</p>
+    <p><strong>Lab:</strong> {{ lab.name }} ({{ lab.lab_code }})</p>
+    <p><strong>Lab address:</strong> {{ lab.address }}</p>
+    <p><strong>ECG record ID:</strong> {{ ecg_test.id }} &nbsp;|&nbsp; <strong>ECG test date:</strong> {{ ecg_test.createdAt }}</p>
+  </div>
+
+  <h2>2. Primary finding</h2>
+  <div class="box">
+    <p><strong>Primary label (model):</strong> {{ primary_diagnosis }}</p>
+    <p><strong>Highest probability:</strong> {% if primary_probability is not none %}{{ "%.2f"|format(primary_probability) }}%{% else %}—{% endif %}</p>
+    <p><strong>Confidence (qualitative):</strong> {{ confidence_label }}</p>
+  </div>
+
+  <h2>3. Top five predicted statements</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Label</th>
+        <th>Code</th>
+        <th>Probability (%)</th>
+        <th>Confidence note</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in top_5 %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ row.label }}</td>
+        <td>{{ row.code }}</td>
+        <td>{{ "%.2f"|format(row.probability|float) }}</td>
+        <td>
+          {% if row.probability >= 85 %}High model output{% elif row.probability >= 60 %}Moderate{% elif row.probability >= 35 %}Limited{% else %}Low{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>4. Top five visualization</h2>
+  <img class="chart" src="{{ chart_data_uri }}" alt="ECG top 5 chart" />
+
+  <h2>5. Medical interpretation (AI-assisted narrative)</h2>
+  <div class="box">
+    <p>{{ llm.interpretation | default('—') }}</p>
+    <p><strong>Urgency:</strong> {{ llm.urgency | default('—') }}</p>
+    <p><strong>Follow-up:</strong> {{ llm.follow_up | default('—') }}</p>
+  </div>
+
+  <h2>6. Warning signs to seek urgent care</h2>
+  <ul>
+    {% for w in llm.warning_signs or [] %}
+    <li>{{ w }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>7. Recommendations</h2>
+  <ul>
+    {% for r in llm.recommendations or [] %}
+    <li>{{ r }}</li>
+    {% endfor %}
+  </ul>
+
+  <div class="disclaimer">
+    This report is based on a machine-learning model trained on public ECG datasets. Results may be affected by signal quality,
+    lead placement, and patient factors. Always consult a licensed clinician for diagnosis and treatment decisions.
+  </div>
+</body>
+</html>

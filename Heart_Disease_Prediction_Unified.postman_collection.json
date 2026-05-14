@@ -9,7 +9,7 @@
 
     "name": "Heart Disease Prediction - Unified API (Simple)",
     "_postman_id": "hd-prediction-api-2026-simple",
-    "description": "Frontend-ready minimal collection.\n\nSecurity: ML/SHAP/report are NOT exposed on FastAPI to browsers. Always call the Node backend; it talks to the internal AI service with X-INTERNAL-API-KEY.\n\nPatient flow:\n1) Auth → Register / Login (saves token)\n2) Lab Tests → Upload CSV (current user only) OR wait for lab portal ingest\n3) Lab Tests → Get My Status (me)\n4) Predictions → Start / SHAP / Report\n\nLab staff (Postman): use folder Lab Portal — POST /api/lab-portal/upload-csv or upload-csvs with x-lab-key only (no patient JWT). national_id in CSV is the patient (e.g. Omar while you are logged in as Youssef elsewhere).\n\nBase URL: http://localhost:5000 (Node API gateway only).",
+    "description": "Frontend-ready minimal collection.\n\nSecurity: ML/SHAP/report are NOT exposed on FastAPI to browsers. Always call the Node backend; it talks to the internal AI service with X-INTERNAL-API-KEY.\n\nPatient flow:\n1) Auth → Register / Login (saves token)\n2) Lab Tests → Upload CSV (current user only) OR wait for lab portal ingest\n3) Lab Tests → Get My Status (me)\n4) Predictions → Start / SHAP / Report (tabular heart disease risk)\n5) ECG folder → status / start / chart / report (uses ecg_tests; lab uploads WFDB via Lab Portal)\n\nLab staff (Postman): Lab Portal — POST /api/lab-portal/upload-csv(s) or POST /api/lab-portal/ecg with x-lab-key + x-lab-id.\n\nBase URL: http://localhost:5000 (Node API gateway only).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -17,7 +17,8 @@
     { "key": "token", "value": "", "type": "string" },
     { "key": "lab_key", "value": "admin-key-change-me", "type": "string" },
     { "key": "labtest_id", "value": "", "type": "string" },
-    { "key": "prediction_id", "value": "", "type": "string" }
+    { "key": "prediction_id", "value": "", "type": "string" },
+    { "key": "ecg_test_id", "value": "", "type": "string" }
   ],
   "item": [
     {
@@ -228,6 +229,42 @@
             },
             "url": { "raw": "{{base_url}}/api/lab-portal/upload-csvs", "host": ["{{base_url}}"], "path": ["api", "lab-portal", "upload-csvs"] }
           }
+        },
+        {
+          "name": "Upload ECG (.dat + .hea)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201 && json.success && json.data && json.data.ecg_test_id) {",
+                  "  pm.environment.set('ecg_test_id', json.data.ecg_test_id);",
+                  "  pm.collectionVariables.set('ecg_test_id', json.data.ecg_test_id);",
+                  "  console.log('ecg_test_id saved:', json.data.ecg_test_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-lab-key", "value": "{{lab_key}}" },
+              { "key": "x-lab-id", "value": "{{lab_id}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "national_id", "value": "", "type": "text" },
+                { "key": "dat_file", "type": "file", "src": [] },
+                { "key": "hea_file", "type": "file", "src": [] }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/api/lab-portal/ecg", "host": ["{{base_url}}"], "path": ["api", "lab-portal", "ecg"] },
+            "description": "Requires registered patient national_id. Set x-lab-id to your lab UUID (same as seed)."
+          }
         }
       ]
     },
@@ -327,7 +364,7 @@
 
 
       "name": "Predictions (Backend gateway)",
-      "description": "JWT required. Node calls internal FastAPI — do not hit :8000 /predict or /shap from the frontend.",
+      "description": "JWT required. Node calls internal FastAPI — do not hit :8000 /predict or /shap from the browser.",
       "item": [
         {
           "name": "Start Prediction",
@@ -342,6 +379,11 @@
                   "  pm.environment.set('prediction_id', json.data.prediction_id);",
                   "  pm.collectionVariables.set('prediction_id', json.data.prediction_id);",
                   "  console.log('✅ prediction_id saved:', json.data.prediction_id);",
+                  "}",
+                  "if (pm.response.code === 201 && json.success && json.data && json.data.lab_test_id) {",
+                  "  pm.environment.set('labtest_id', json.data.lab_test_id);",
+                  "  pm.collectionVariables.set('labtest_id', json.data.lab_test_id);",
+                  "  console.log('✅ labtest_id saved:', json.data.lab_test_id);",
                   "}",
                   "console.log('Start prediction:', json);"
                 ]
@@ -378,7 +420,7 @@
 
 
             },
-            "description": "Uses the latest LabTest row for the logged-in user's national_id. Response data includes prediction_id for SHAP/report."
+            "description": "Uses the latest LabTest row for the logged-in user's national_id. Response data includes prediction_id for SHAP/report and lab_test_id (saved to {{labtest_id}})."
           }
         },
         {
@@ -440,6 +482,87 @@
 
             },
             "description": "Returns application/pdf. Ownership enforced — only your prediction."
+          }
+        }
+      ]
+    },
+    {
+      "name": "ECG (patient JWT)",
+      "description": "ECG uses table ecg_tests. Lab uploads WFDB via Lab Portal → /api/lab-portal/ecg. Patient runs inference via POST /api/ecg/start (latest record, cached).",
+      "item": [
+        {
+          "name": "ECG — Get my status",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/ecg/me/status", "host": ["{{base_url}}"], "path": ["api", "ecg", "me", "status"] }
+          }
+        },
+        {
+          "name": "ECG — List my tests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/ecg/me?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ecg", "me"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "ECG — Start (latest, cached)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if ((pm.response.code === 201 || pm.response.code === 200) && json.success && json.data && json.data.ecg_test_id) {",
+                  "  pm.environment.set('ecg_test_id', json.data.ecg_test_id);",
+                  "  pm.collectionVariables.set('ecg_test_id', json.data.ecg_test_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{}", "options": { "raw": { "language": "json" } } },
+            "url": { "raw": "{{base_url}}/api/ecg/start", "host": ["{{base_url}}"], "path": ["api", "ecg", "start"] }
+          }
+        },
+        {
+          "name": "ECG — Get detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/ecg/{{ecg_test_id}}", "host": ["{{base_url}}"], "path": ["api", "ecg", "{{ecg_test_id}}"] }
+          }
+        },
+        {
+          "name": "ECG — Chart (PNG)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/ecg/chart/{{ecg_test_id}}", "host": ["{{base_url}}"], "path": ["api", "ecg", "chart", "{{ecg_test_id}}"] }
+          }
+        },
+        {
+          "name": "ECG — Report (PDF)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/api/ecg/{{ecg_test_id}}/report", "host": ["{{base_url}}"], "path": ["api", "ecg", "{{ecg_test_id}}", "report"] }
           }
         }
       ]

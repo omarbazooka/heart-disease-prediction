@@ -1,0 +1,101 @@
+/* Same card / typography as Have_no_risk (6% healthy result) — scoped names */
+.ecg-result-card {
+  width: 470px;
+  max-width: 92%;
+  padding: 40px 35px;
+  border-radius: 35px;
+  background: linear-gradient(
+    to right,
+    rgba(120, 195, 216, 0.95),
+    rgba(18, 83, 94, 0.92)
+  );
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(17, 152, 183, 0.25);
+  margin: 30px auto;
+}
+
+.ecg-result-label {
+  font-size: 18px;
+  opacity: 0.95;
+  margin: 0 0 10px;
+  letter-spacing: 2px;
+}
+
+.ecg-result-value {
+  font-size: 62px;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.ecg-result-status {
+  margin: 18px 0 0;
+}
+
+.ecg-result-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #dcfce7;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.ecg-result-status-row svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .ecg-result-card {
+    width: 95%;
+    padding: 30px 20px;
+  }
+
+  .ecg-result-value {
+    font-size: 42px;
+  }
+
+  .ecg-result-status-row {
+    font-size: 18px;
+  }
+}
+
+.ecg-start-btn {
+  background-color: #cb2323 !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.ecg-start-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.ecg-chart-wrap {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+.ecg-chart-wrap img {
+  max-width: 100%;
+  width: min(750px, 100%);
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.ecg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.ecg-actions .btn {
+  min-width: 140px;
+}

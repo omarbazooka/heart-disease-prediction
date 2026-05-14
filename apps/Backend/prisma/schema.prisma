@@ -16,6 +16,7 @@ model User {
   updatedAt   DateTime @updatedAt
 
   predictions Prediction[]
+  ecgTests    EcgTest[]
 
   @@map("users")
 }
@@ -28,6 +29,7 @@ model Lab {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   labTests  LabTest[]
+  ecgTests  EcgTest[]
 
   @@map("labs")
 }
@@ -88,4 +90,50 @@ model Hospital {
   updatedAt        DateTime @updatedAt
 
   @@map("hospitals")
+}
+
+/// WFDB ECG uploads and AI pipeline results (separate from lab_tests / predictions).
+model EcgTest {
+  id                    String    @id @default(cuid())
+  lab_id                String
+  national_id           String
+  user_id               String?
+
+  dat_file_path         String?
+  hea_file_path         String?
+  original_dat_name     String?
+  original_hea_name     String?
+  storage_backend       String    @default("local")
+  file_size_bytes       Int?
+  checksum_dat          String?
+  checksum_hea          String?
+
+  primary_diagnosis     String?
+  primary_probability   Float?
+  detailed_results_json Json?
+
+  model_name            String?
+  model_version         String?
+  inference_status      String    @default("pending")
+  inference_error       String?
+  inferred_at           DateTime?
+
+  llm_ecg_json          Json?
+  llm_model             String?
+  llm_prompt_version    String?
+
+  prediction_completed_at DateTime?
+
+  uploaded_by           String    @default("lab_portal")
+  client_request_id     String?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  lab                   Lab       @relation(fields: [lab_id], references: [id], onDelete: Cascade)
+  user                  User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([national_id, createdAt])
+  @@index([lab_id])
+  @@map("ecg_tests")
 }

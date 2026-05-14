@@ -33,4 +33,5 @@ coverage/
 tmp/
 temp/
 
-/generated/prisma
+# Uploaded ECG WFDB files (local disk storage)
+uploads/ecg/

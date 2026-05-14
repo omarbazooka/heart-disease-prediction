@@ -151,6 +151,61 @@ def generate_shap_waterfall_chart(shap_tuple: tuple) -> str:
         return _fig_to_b64(fig)
 
 
+def generate_ecg_top5_chart_png_bytes(top5: list[dict], *, compact: bool = False) -> bytes:
+    """
+    Horizontal bar chart of ECG multi-label top-5 probabilities (%).
+
+    Each item should include ``code``, ``probability``, and optionally ``label``.
+    ``compact=True`` uses a smaller figure for dashboard / mobile views.
+    """
+    if not top5:
+        raise ValueError("top5 must be a non-empty list")
+
+    items = top5[:5]
+    probs = [float(d.get("probability", 0)) for d in items]
+    tick_labels = []
+    for d in items:
+        lbl = str(d.get("label", d.get("code", "?")))
+        tick_labels.append(lbl if len(lbl) <= 36 else lbl[:33] + "…")
+
+    figsize = (7.0, 3.0) if compact else (10.0, 4.5)
+    dpi = 120 if compact else 150
+
+    with plt.rc_context(_STYLE):
+        fig, ax = plt.subplots(figsize=figsize)
+        colors = plt.cm.Blues(np.linspace(0.45, 0.9, len(items)))[::-1]
+        y_pos = np.arange(len(items))
+        bars = ax.barh(y_pos, probs, color=colors, edgecolor="white", linewidth=0.6, height=0.55)
+
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(tick_labels, fontsize=9)
+        ax.invert_yaxis()
+        ax.set_xlabel("Model probability (%)", fontsize=10)
+        ax.set_title("Top 5 ECG findings (PTB-XL-style labels)", fontsize=12, fontweight="bold", pad=10)
+        ax.set_xlim(0, max(100, max(probs) * 1.08))
+        ax.grid(True, axis="x")
+        ax.set_axisbelow(True)
+
+        for bar, p in zip(bars, probs):
+            w = bar.get_width()
+            ax.text(
+                w + 0.8,
+                bar.get_y() + bar.get_height() / 2,
+                f"{p:.1f}%",
+                va="center",
+                fontsize=9,
+                color="#475569",
+            )
+
+        fig.tight_layout()
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight", dpi=dpi)
+        plt.close(fig)
+        buf.seek(0)
+        return buf.getvalue()
+
+
 def clear_chart_cache() -> None:
     """Manually clear the lru_cache for both chart functions."""
     generate_feature_importance_chart.cache_clear()

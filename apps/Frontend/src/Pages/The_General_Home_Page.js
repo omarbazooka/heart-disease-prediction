@@ -417,6 +417,7 @@ import axios from "axios";
 function Home() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [ecgLoading, setEcgLoading] = useState(false);
 
   const handleStartPrediction = async () => {
     try {
@@ -462,6 +463,43 @@ function Home() {
     }
   };
 
+  const handleStartEcg = async () => {
+    try {
+      setEcgLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please Login First");
+        return;
+      }
+      const statusRes = await axios.get("http://localhost:5000/api/ecg/me/status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!statusRes.data.data.hasEcgTests) {
+        navigate("/ecg");
+        return;
+      }
+      const predRes = await axios.post(
+        "http://localhost:5000/api/ecg/start",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const ecgData = predRes.data.data;
+      localStorage.setItem("ecg_prediction", JSON.stringify(ecgData));
+      localStorage.setItem("ecg_test_id", ecgData.ecg_test_id);
+      navigate("/ecg");
+    } catch (err) {
+      console.log(err);
+      if (err.response?.data?.code === "NO_ECG" || err.response?.status === 404) {
+        navigate("/ecg");
+      } else {
+        alert(err.response?.data?.message || "ECG analysis failed");
+        navigate("/ecg");
+      }
+    } finally {
+      setEcgLoading(false);
+    }
+  };
+
   return (
     <div className="home-page">
       {" "}
@@ -473,14 +511,28 @@ function Home() {
         <p className="hero-subtitle">Advanced AI-Powered Analysis To Assess </p>{" "}
         <p className="hero-subtitle">Your Heart Health Risk Factors</p>{" "}
         <div className="hero-buttons">
-          {" "}
-          <button onClick={handleStartPrediction} disabled={loading} className="btn custom-btn px-4 py-2 rounded-pill me-3">
-             {loading ? "Loading..." : "Start Prediction →"}
-          </button>
-
-          <Link to="/learnmore" className="btn learn btn-outline-dark rounded-pill">
-                       Learn More →
-          </Link>
+          <div className="hero-buttons-top">
+            <button
+              onClick={handleStartPrediction}
+              disabled={loading || ecgLoading}
+              className="btn custom-btn px-4 py-2 rounded-pill"
+            >
+              {loading ? "Loading..." : "Start Prediction →"}
+            </button>
+            <button
+              type="button"
+              onClick={handleStartEcg}
+              disabled={loading || ecgLoading}
+              className="btn btn-ecg-home px-4 py-2 rounded-pill"
+            >
+              {ecgLoading ? "Loading..." : "Start ECG →"}
+            </button>
+          </div>
+          <div className="hero-buttons-bottom">
+            <Link to="/learnmore" className="btn learn btn-outline-dark rounded-pill">
+              Learn More →
+            </Link>
+          </div>
         </div>{" "}
       </section>{" "}
       {/* Features Section */}
