@@ -75,6 +75,7 @@ const Register = () => {
 
   const handleRegister = async () => {
     if (!validate()) return;
+    console.log("FORM DATA => ", form);
 
     try {
       setLoading(true);
@@ -137,13 +138,13 @@ const Register = () => {
             )}
 
             <Input
-              icon={FaUser}
-              name="username"
-              type="text"
-              placeholder="Username"
-              value={form.username}
+              icon={FaEnvelope}
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={form.email}
               onChange={handleChange}
-              error={errors.username}
+              error={errors.email}
             />
 
             <Input
@@ -157,13 +158,13 @@ const Register = () => {
             />
 
             <Input
-              icon={FaEnvelope}
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={form.email}
+              icon={FaUser}
+              name="username"
+              type="text"
+              placeholder="Username"
+              value={form.username}
               onChange={handleChange}
-              error={errors.email}
+              error={errors.username}
             />
 
             <Input
