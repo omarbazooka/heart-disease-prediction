@@ -4,7 +4,7 @@
 
 `http://localhost:5000`
 
-> **Beginner Tip:** You only need to talk to the Node.js server running on port `5000`. The Node.js server will handle talking to the AI model behind the scenes. Never try to call the Python AI server directly from your frontend code. Lab staff ingest CSV files through `/api/lab-portal` with `x-lab-key` (Postman / back-office), not through patient JWT routes.
+> **Beginner Tip:** You only need to talk to the Node.js server running on port `5000`. The Node.js server will handle talking to the AI model behind the scenes. Never try to call the Python AI server directly from your frontend code. Lab staff ingest CSV files through `/api/lab-portal` with `x-lab-key` (Postman / back-office), not through patient JWT routes. **ECG** uses the same pattern: labs upload WFDB `.dat` / `.hea` pairs to `/api/lab-portal/ecg`; patients run analysis and download charts or PDFs only through `/api/ecg` with their JWT.
 
 ---
 
@@ -290,7 +290,7 @@ Backend uses `cors` with `credentials: true`. Set `CORS_ORIGIN` on the server to
 `/api/predictions`
 
 > 💡 **How it works:**
-> This is the core of the app. You tell the backend to start a prediction for the logged-in user. The backend looks up their latest lab test, talks to the AI, and returns the risk level. If the risk is High, it generates a SHAP image and a PDF report.
+> This is the core of the app. You tell the backend to start a prediction for the logged-in user. The backend looks up their **latest** lab test, runs the heart-disease model (or returns an **existing** prediction row for that lab test if one was already stored), and returns the risk level. If the risk is High, you may fetch a SHAP image and a PDF report.
 
 ## PRED-1 · Start Prediction
 
@@ -372,6 +372,8 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
 
 > **Beginner Tip:** Save the `prediction_id`! You will need it in the next steps to get the images and reports. Also, if `decision` is `low`, the `show_shap`, `show_report`, and `show_hospitals` fields are all `false` (so you do not show the hospital section either).
 
+> **Caching:** If a prediction row already exists for the user’s latest lab test, the backend returns that same `prediction_id` and fields **without** calling the AI service again.
+
 **Example `201` — Low risk:**
 
 ```json
@@ -434,6 +436,8 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
 
 **Response `403` / `404` — Not your prediction or missing row:**
 
+*Access is denied if the prediction is linked to another user’s `user_id`. Older rows may omit `user_id`; then the backend allows access when the linked lab test’s `national_id` matches the logged-in user.*
+
 ```json
 {
   "success": false,
@@ -470,6 +474,8 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
 
 **Response `403` / `404` — Not your prediction or missing row:**
 
+*Access is denied if the prediction is linked to another user’s `user_id`. Older rows may omit `user_id`; then the backend allows access when the linked lab test’s `national_id` matches the logged-in user.*
+
 ```json
 {
   "success": false,
@@ -490,9 +496,174 @@ The server picks the **latest lab test** for the logged-in user’s `national_id
 
 | # | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- | --- |
-| 1 | `POST` | `/api/predictions/start` | User | Run AI prediction on latest lab test |
+| 1 | `POST` | `/api/predictions/start` | User | Run or return **cached** heart-disease prediction on latest lab test |
 | 2 | `GET` | `/api/predictions/{id}/shap` | User | Get SHAP explanation image (PNG) |
 | 3 | `GET` | `/api/predictions/{id}/report` | User | Get medical report (PDF) |
+
+---
+
+# 📈 ECG Module (patient)
+
+`/api/ecg`
+
+> 💡 **How it works:**
+> ECG is **separate** from lab blood tests and `/api/predictions`. A registered patient must have at least one **ECG test row** created when their lab uploads WFDB files via `POST /api/lab-portal/ecg`. The patient then calls **`POST /api/ecg/start`** to run (or reload) AI inference on their **latest** ECG upload. Use the returned `ecg_test_id` for chart PNG, PDF report, and detail JSON. Inference is **cached**: if the latest test already completed successfully (`inference_status` is `ok` with stored results), `start` returns those results immediately with `cached: true`.
+
+**All routes below require:** `Authorization: Bearer <token>`
+
+## ECG-1 · Get My ECG Status
+
+**GET** `/api/ecg/me/status`
+
+**Expected:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "hasEcgTests": true,
+    "latestEcgTestId": "cuid-ecg-test",
+    "latestInferenceStatus": "ok",
+    "latestSummary": {
+      "ecg_test_id": "cuid-ecg-test",
+      "createdAt": "2026-05-14T12:00:00.000Z",
+      "primary_diagnosis": "Myocardial Infarction",
+      "primary_probability": 0.62,
+      "inference_status": "ok"
+    }
+  }
+}
+```
+
+*When the patient has no ECG rows yet, `hasEcgTests` is `false` and `latestEcgTestId` / `latestSummary` are `null`.*
+
+## ECG-2 · List My ECG Tests
+
+**GET** `/api/ecg/me?page=1&limit=10`
+
+**Query:** `page` (default `1`), `limit` (default `10`, max `50`).
+
+**Expected:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "cuid-ecg-test",
+      "createdAt": "2026-05-14T12:00:00.000Z",
+      "inference_status": "ok",
+      "primary_diagnosis": "Myocardial Infarction",
+      "primary_probability": 0.62,
+      "lab": { "name": "AL Borg Labs", "lab_code": "AL Borg 123" }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 1,
+    "totalPages": 1
+  }
+}
+```
+
+## ECG-3 · Start ECG (run or reload latest)
+
+**POST** `/api/ecg/start`
+
+**Body:** `{}` (empty JSON object is fine; body may be omitted if your client sends none)
+
+**Expected:** `201 Created`
+
+```json
+{
+  "success": true,
+  "message": "ECG prediction completed",
+  "data": {
+    "cached": false,
+    "ecg_test_id": "cuid-ecg-test",
+    "primary_diagnosis": "Myocardial Infarction",
+    "primary_probability": 0.62,
+    "top_5": [
+      { "code": "MI", "label": "Myocardial Infarction", "probability": 0.62 }
+    ],
+    "llm_ecg_json": {},
+    "model_name": "fastai_xresnet1d101",
+    "model_version": "1.0.0",
+    "createdAt": "2026-05-14T12:00:00.000Z"
+  }
+}
+```
+
+*If results were already stored for the latest test, `message` is `"ECG prediction loaded from saved results"` and `cached` is `true`.*
+
+**Response `404` — No ECG upload for this patient:**
+
+```json
+{
+  "success": false,
+  "code": "NO_ECG",
+  "message": "No ECG Data"
+}
+```
+
+**Response `400` — Files missing on disk (bad upload state):** JSON error from the global handler (message indicates the record is missing WFDB files).
+
+## ECG-4 · Get ECG Chart (PNG)
+
+**GET** `/api/ecg/chart/{ecgTestId}`
+
+**Expected:** `200 OK` · Raw **PNG** (`Content-Type: image/png`). Use a Blob in the browser for `<img>`.
+
+**Response `404` — No `top_5` yet (run `POST /api/ecg/start` first):** JSON error such as *No ECG prediction chart available for this test yet*.
+
+**Response `403` / `404` — Wrong patient or unknown id:** standard forbidden / not found.
+
+## ECG-5 · Get ECG Report (PDF)
+
+**GET** `/api/ecg/{ecgTestId}/report`
+
+**Expected:** `200 OK` · Raw **PDF** (`Content-Type: application/pdf`), `Content-Disposition: attachment; filename=ecg_report_{ecgTestId}.pdf`.
+
+**Response `400` — Inference not complete:** *ECG report is not available until prediction completes.*
+
+## ECG-6 · Get ECG Detail (JSON)
+
+**GET** `/api/ecg/{ecgTestId}`
+
+**Expected:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": {
+    "ecg_test_id": "cuid-ecg-test",
+    "lab_id": "cuid-lab",
+    "national_id": "29501010001001",
+    "createdAt": "2026-05-14T12:00:00.000Z",
+    "inference_status": "ok",
+    "primary_diagnosis": "Myocardial Infarction",
+    "primary_probability": 0.62,
+    "top_5": [
+      { "code": "MI", "label": "Myocardial Infarction", "probability": 0.62 }
+    ],
+    "llm_ecg_json": {},
+    "model_name": "fastai_xresnet1d101",
+    "model_version": "1.0.0"
+  }
+}
+```
+
+## Quick Reference Table (ECG)
+
+| # | Method | Endpoint | Auth | Description |
+| --- | --- | --- | --- | --- |
+| 1 | `GET` | `/api/ecg/me/status` | User | Whether the patient has ECG rows + latest summary |
+| 2 | `GET` | `/api/ecg/me` | User | Paginated list of the patient’s ECG tests |
+| 3 | `POST` | `/api/ecg/start` | User | Run or reload AI on **latest** ECG upload |
+| 4 | `GET` | `/api/ecg/chart/{ecgTestId}` | User | Top-5 chart PNG |
+| 5 | `GET` | `/api/ecg/{ecgTestId}/report` | User | ECG PDF report |
+| 6 | `GET` | `/api/ecg/{ecgTestId}` | User | Full detail JSON for one test |
 
 ---
 
@@ -804,13 +975,16 @@ Each file = one row, one patient. Used for batch/admin workflows.
 `/api/lab-portal`
 
 > 💡 **How it works:**
-> Lab CSV ingest is **separate** from patient JWT flows. Send `x-lab-key` only (`LAB_API_KEY` in Backend `.env`; falls back to `ADMIN_API_KEY`). Do **not** send `Authorization: Bearer`. The `national_id` inside each CSV is the patient (for example Omar's file while someone else is logged in on another screen).
+> Lab ingest is **separate** from patient JWT flows. Send the lab ingest secret in **`x-lab-key`** or **`x-admin-key`** (the server compares the header value to `LAB_API_KEY` from Backend `.env`, or to `ADMIN_API_KEY` when `LAB_API_KEY` is not set). Do **not** send `Authorization: Bearer`. The `national_id` inside each CSV (or ECG form) is the patient. **Optional `x-lab-id`:** If you send `x-lab-id: <cuid of your lab row>`, every CSV’s `lab_id` column must match that id — useful when one key is shared but uploads must stay scoped to a single lab. **ECG:** WFDB `.dat` / `.hea` uploads use `POST /api/lab-portal/ecg` with **`x-lab-id` required**; the backend stores files only (no AI) until the patient calls `POST /api/ecg/start`.
 
 ## LP-1 · Upload Single Patient CSV
 
 **POST** `/api/lab-portal/upload-csv`
 
-**Headers:** `x-lab-key: <LAB_API_KEY>`
+**Headers:**
+- `x-lab-key: <secret>` or `x-admin-key: <same secret>` (must match `LAB_API_KEY`, or `ADMIN_API_KEY` if `LAB_API_KEY` is unset)
+- Optional: `x-lab-id: <lab_cuid>` — if present, the CSV row’s `lab_id` must equal this value
+
 **Content-Type:** `multipart/form-data`
 
 **Body:** Form data key `file` (or `files`) with one CSV containing one data row.
@@ -888,7 +1062,10 @@ Each file = one row, one patient. Used for batch/admin workflows.
 
 **POST** `/api/lab-portal/upload-csvs`
 
-**Headers:** `x-lab-key: <LAB_API_KEY>`
+**Headers:**
+- `x-lab-key: <secret>` or `x-admin-key: <same secret>` (must match `LAB_API_KEY`, or `ADMIN_API_KEY` if `LAB_API_KEY` is unset)
+- Optional: `x-lab-id: <lab_cuid>` — if present, each successful CSV’s `lab_id` must equal this value
+
 **Content-Type:** `multipart/form-data`
 
 **Body:** Form data key `files` (attach 1 to 5 CSV files; one patient per file; unique `national_id` per request).
@@ -950,12 +1127,85 @@ Each file = one row, one patient. Used for batch/admin workflows.
 }
 ```
 
+## LP-3 · Upload ECG (WFDB `.dat` + `.hea`)
+
+**POST** `/api/lab-portal/ecg`
+
+Stores a new **ECG test** row and the WFDB file pair for a **registered** patient. Inference does **not** run here; the patient triggers AI with `POST /api/ecg/start` after login.
+
+**Headers:**
+- `x-lab-key: <secret>` or `x-admin-key: <same secret>` (must match `LAB_API_KEY`, or `ADMIN_API_KEY` if `LAB_API_KEY` is unset)
+- **`x-lab-id: <lab_cuid>`** (required) — must match an existing lab row; the ECG record is created under this lab
+
+**Content-Type:** `multipart/form-data`
+
+**Body (form fields):**
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `dat_file` | Yes | WFDB signal file; filename must end with `.dat` |
+| `hea_file` | Yes | WFDB header file; filename must end with `.hea` |
+| `national_id` | Yes | 14 digits; patient must already exist in `users` |
+| `client_request_id` | No | Optional idempotency / trace string (stored truncated) |
+
+**Limits:** Up to **80 MB** total upload size (multer limit for the two files).
+
+**Expected:** `201 Created`
+
+```json
+{
+  "success": true,
+  "message": "ECG WFDB files stored",
+  "data": {
+    "ecg_test_id": "cuid-ecg-test",
+    "lab_id": "cuid-lab",
+    "national_id": "30203024567891",
+    "createdAt": "2026-05-14T12:00:00.000Z",
+    "inference_status": "pending",
+    "primary_diagnosis": null,
+    "primary_probability": null,
+    "top_5": null,
+    "llm_ecg_json": null,
+    "model_name": null,
+    "model_version": null
+  }
+}
+```
+
+**Response `400` — Missing lab header, files, or unknown patient (examples):**
+
+```json
+{
+  "success": false,
+  "message": "x-lab-id header is required"
+}
+```
+
+```json
+{
+  "success": false,
+  "message": "No registered patient found for this national_id. Ask the patient to register before ECG upload."
+}
+```
+
+**Response `404` — Lab id does not exist:**
+
+```json
+{
+  "success": false,
+  "message": "Lab not found for x-lab-id"
+}
+```
+
+*Wrong file extensions (for example `.txt` renamed to `.dat`) are rejected by the upload filter.*
+
 ## Quick Reference Table (Lab Portal)
 
 | # | Method | Endpoint | Auth | Description |
 | --- | --- | --- | --- | --- |
-| 1 | `POST` | `/api/lab-portal/upload-csv` | `x-lab-key` | Ingest one patient CSV |
-| 2 | `POST` | `/api/lab-portal/upload-csvs` | `x-lab-key` | Ingest 1–5 patient CSVs in one request |
+| 1 | `POST` | `/api/lab-portal/upload-csv` | Lab secret header (+ optional `x-lab-id`) | Ingest one patient CSV |
+| 2 | `POST` | `/api/lab-portal/upload-csvs` | Lab secret header (+ optional `x-lab-id`) | Ingest 1–5 patient CSVs in one request |
+| 3 | `POST` | `/api/lab-portal/ecg` | Lab secret header + **`x-lab-id`** | Store WFDB ECG pair for a patient (`pending` until `/api/ecg/start`) |
 
 ---
 
@@ -1135,17 +1385,20 @@ Each file = one row, one patient. Used for batch/admin workflows.
 2. **Lab Tests — Check Status:** Call `GET /api/labtests/me/status`.
    - If `hasLabTests` is `false`, show the Upload Data screen **or** tell the user their lab will upload results.
 3. **Lab Tests — Upload Data (patient path):** Call `POST /api/labtests/upload-csv` only when the patient uploads for themselves (`national_id` in CSV = logged-in user).
-   - **Lab staff (Postman):** use `POST /api/lab-portal/upload-csv` or `POST /api/lab-portal/upload-csvs` with `x-lab-key` only — no patient `Authorization` header.
+   - **Lab staff (Postman):** use `POST /api/lab-portal/upload-csv` or `POST /api/lab-portal/upload-csvs` with `x-lab-key` (optional `x-lab-id` to lock uploads to one lab) — no patient `Authorization` header.
 4. **Predictions — Start:** Call `POST /api/predictions/start` with the patient's JWT.
-   - Backend uses the **latest** lab test for that user's `national_id`.
+   - Backend uses the **latest** lab test for that user's `national_id`. If a prediction already exists for that lab test, the same `prediction_id` is returned without calling the AI again.
    - Save the `prediction_id`.
    - Check the `decision` (`high` or `low`).
-5. **Display Results:**
+5. **Display Results (lab / heart disease):**
    - If `decision` is **low**: Show a reassuring message. Do **not** fetch SHAP or reports.
    - If `decision` is **high**:
      - Call `GET /api/predictions/{id}/shap` and display the image.
      - Call `GET /api/predictions/{id}/report` and provide a download button.
      - Call `GET /api/hospitals` and display nearby hospitals.
+6. **ECG (optional product flow):**
+   - **Lab staff:** After the patient is registered, upload WFDB with `POST /api/lab-portal/ecg` (`x-lab-key` + required `x-lab-id`).
+   - **Patient:** Call `GET /api/ecg/me/status` to see if data exists, then `POST /api/ecg/start` (cached when already `ok`). Save `ecg_test_id`, then load `GET /api/ecg/chart/{ecgTestId}`, `GET /api/ecg/{ecgTestId}/report`, or `GET /api/ecg/{ecgTestId}` as needed.
 
 ---
 
@@ -1155,8 +1408,10 @@ Each file = one row, one patient. Used for batch/admin workflows.
 | --- | --- | --- |
 | **Admin Keys** | ⚠️ | Never expose `ADMIN_API_KEY`, `LAB_API_KEY`, or `INTERNAL_API_KEY` in frontend code. |
 | **Lab Portal** | ⚠️ | `x-lab-key` is for lab/Postman ingest only. Do not embed it in the patient web app. |
+| **ECG uploads** | ⚠️ | WFDB uploads and `x-lab-id` are server-side only; never expose ingest secrets or raw clinical files in client bundles. |
 | **AI Service** | ⚠️ | Never call `http://127.0.0.1:8000` (FastAPI) directly from the client. |
 | **HTTPS** | ✅ | Send JWT only over HTTPS in production. |
+
 | **Data Privacy** | ✅ | Treat `prediction_id` as sensitive; always use with the user’s own session. |
 
 
@@ -1299,3 +1554,5 @@ All require **Bearer** token.
 *Generated for frontend integration. Backend version aligns with Express routes under `apps/Backend/src/routes/`.*
 | **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` responses (for example low-risk SHAP/report, wrong lab key, missing lab test, AI gateway failure). |
 | **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` responses (for example low-risk SHAP/report, wrong lab key, missing lab test, AI gateway failure). |
+| **Data Privacy** | ✅ | Treat `prediction_id` and `ecg_test_id` as sensitive; always use with the user’s own session. |
+| **Error Handling**| ✅ | Handle `400` / `403` / `404` / `502` (low-risk SHAP/report, lab key, missing lab test, ECG `NO_ECG`, AI gateway failures). |
