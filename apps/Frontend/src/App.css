@@ -1,17 +1,16 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
   height: 100%;
   font-family: sans-serif;
+  overflow-x: hidden;
 }
 
-/* ===== APP LAYOUT ===== */
-.app-container {
+#root {
+  width: 100%;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-
-  /* 🌈 الخلفية الموحدة */
+  position: relative;
   background: linear-gradient(
     to right,
     rgba(78, 160, 177, 0.3) 0%,
@@ -19,6 +18,16 @@ html, body {
     #ffffff 90%,
     rgba(17, 152, 183, 0.3) 100%
   );
+  background-attachment: fixed;
+}
+
+/* ===== APP LAYOUT ===== */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: transparent;
 }
 
 /* ===== PAGE AREA ===== */

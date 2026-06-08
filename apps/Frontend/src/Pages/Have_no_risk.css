@@ -17,16 +17,6 @@ body {
     "Segoe UI",
     sans-serif;
 
-  min-height: 100vh;
-
-  background: linear-gradient(
-    to right,
-    rgba(78, 160, 177, 0.25) 0%,
-    #ffffff 10%,
-    #ffffff 90%,
-    rgba(17, 152, 183, 0.25) 100%
-  );
-
   margin: 0;
 }
 

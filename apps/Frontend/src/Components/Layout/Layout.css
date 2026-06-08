@@ -1,0 +1,13 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+/* عشان المحتوى مايلزقش */
+.content {
+  flex: 1;
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+}

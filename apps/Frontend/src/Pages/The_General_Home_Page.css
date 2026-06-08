@@ -8,16 +8,6 @@
 }
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  min-height: 100vh;
-  background: linear-gradient(
-    to right,
-    rgb(78, 160, 177, 0.4) 0%,
-    rgb(78, 160, 177, 0.4) 2%,
-    #f4f9fc 7%,
-    #f4f9fc 93%,
-    rgb(78, 160, 177, 0.4) 98%,
-    rgb(78, 160, 177, 0.4) 100%
-  );
 }
 .home-page {
   margin: 0 auto;

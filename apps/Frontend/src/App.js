@@ -16,6 +16,7 @@ import EcgPrediction from "./Components/Ecg/EcgPrediction";
 import Learnmore from "./Components/Learnmore/Learnmore";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import LabPortal from "./Pages/LabPortal";
+import Layout from "./Components/Layout/Layout";
 
 import { AuthProvider } from "./Context/AuthContext";
 
@@ -47,11 +48,13 @@ export default function App() {
   <Route path="/" element={<Navigate to="/heart" />} />
 
   {/* PUBLIC ROUTES */}
-  <Route path="/heart" element={<Heart />} />
-  <Route path="/home" element={<Navigate to="/the_general" />} />
-  <Route path="/login" element={<Login />} />
-  <Route path="/register" element={<Register />} />
-  <Route path="/lab-portal" element={<LabPortal />} />
+    <Route path="/" element={<Layout/>} />
+    <Route path="/heart" element={<Heart />} />
+    <Route path="/home" element={<Navigate to="/the_general" />} />
+    <Route path="/login" element={<Login />} />
+    <Route path="/register" element={<Register />} />
+    <Route path="/lab-portal" element={<LabPortal />} />
+  
 
   {/* PROTECTED ROUTES */}
   <Route

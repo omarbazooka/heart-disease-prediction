@@ -544,12 +544,66 @@ function Home() {
               <div className="icon">
                 <img src={nabd} className="image_iconn" alt="accurate analysis icon" />
 
+
               </div>
               <h5 className="Title_card">Accurate Analysis</h5>
               <p className="cap_Card">
                 Advanced Machine Learning Models Trained On Extensive Medical
                 Data
               </p>
+
+      <p className="hero-subtitle">
+        Advanced AI-Powered Analysis To Assess
+      </p>
+
+      <p className="hero-subtitle">
+        Your Heart Health Risk Factors
+      </p>
+
+      <div className="hero-buttons">
+        <div className="hero-buttons-top">
+          <button
+            onClick={handleStartPrediction}
+            disabled={loading || ecgLoading}
+            className="btn custom-btn px-4 py-2 rounded-pill"
+          >
+            {loading ? "Loading..." : "Start Prediction →"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleStartEcg}
+            disabled={loading || ecgLoading}
+            className="btn btn-ecg-home px-4 py-2 rounded-pill"
+          >
+            {ecgLoading ? "Loading..." : "Start ECG →"}
+          </button>
+        </div>
+
+        <div className="hero-buttons-bottom">
+          <Link
+            to="/learnmore"
+            className="btn learn btn-outline-dark px-4 py-2 rounded-pill"
+          >
+            Learn More →
+          </Link>
+        </div>
+      </div>
+    </section>
+
+    {/* Features Section */}
+    <section className="container my-5">
+      <div className="row align-items-stretch justify-content-center text-center g-4">
+
+        {/* Card 1 */}
+        <div className="col-md-4">
+          <div className="feature-card">
+            <div className="icon">
+              <img
+                src={nabd}
+                className="image_iconn"
+                alt="accurate analysis icon"
+              />
             </div>
           </div>
 

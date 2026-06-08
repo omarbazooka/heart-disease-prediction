@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 
-from core.security import verify_internal_api_key
+from app.core.security import verify_internal_api_key
 from db.database import get_db
 from db.models import Lab, LabTest, Prediction, User
 from schemas.internal import InternalTargetRequest
