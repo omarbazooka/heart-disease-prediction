@@ -1,6 +1,10 @@
 from sqlalchemy import Column, Integer, Float, String, LargeBinary, JSON, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+<<<<<<< HEAD
 from app.db.database import Base
+=======
+from db.database import Base
+>>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
 from datetime import datetime
 
 class User(Base):

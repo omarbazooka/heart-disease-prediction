@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 
+
 from app.core.security import verify_internal_api_key
 
 from db.database import get_db
@@ -36,6 +37,15 @@ from app.schemas.internal import InternalTargetRequest
 from app.services import chart_service
 from app.services.ml_service import ml_service
 from app.services.pdf_service import generate_medical_report_pdf
+
+from core.security import verify_internal_api_key
+from db.database import get_db
+from db.models import Lab, LabTest, Prediction, User
+from schemas.internal import InternalTargetRequest
+from services import chart_service
+from services.ml_service import ml_service
+from services.pdf_service import generate_medical_report_pdf
+
 
 AI_DIR = Path(__file__).resolve().parent.parent.parent.parent
 if str(AI_DIR) not in sys.path:
@@ -86,6 +96,7 @@ def _apply_user_id(prediction_record: Prediction, user_id: str | None, db: Sessi
     if user_id and prediction_record.user_id != user_id:
         prediction_record.user_id = user_id
         db.commit()
+
 
 
 
@@ -153,6 +164,7 @@ def _generate_medical_pdf_bytes(
     except Exception as e:
         print(f"Warning: PDF report generation failed: {e}")
         return None
+
 
 
 
@@ -305,9 +317,12 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
         prediction_record.shap_image = image_bytes
 
 
+
         shap_tuple = tuple(sorted(shap_data.items()))
         feat_chart = chart_service.generate_feature_importance_chart(shap_tuple)
         shap_chart = chart_service.generate_shap_waterfall_chart(shap_tuple)
+
+
 
 
         if consultant:
@@ -328,6 +343,7 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
             llm_result = {"explanation": "LLM Consultant is not initialized.", "recommendations": []}
             prediction_record.llm_report_json = llm_result
 
+
         pdf_bytes = _generate_medical_pdf_bytes(
             patient, prediction_record, patient_name, lab_record, shap_data, llm_result
         )
@@ -337,6 +353,7 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
         else:
             prediction_record.pdf_binary = None
             prediction_record.report_generated_at = None
+
 
         patient_data = {
             "name": patient_name,
@@ -387,6 +404,8 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
 
         prediction_record.pdf_binary = pdf_bytes_io.getvalue()
         prediction_record.report_generated_at = datetime.utcnow().isoformat()
+
+
 
     else:
         prediction_record.shap_image = None
@@ -599,6 +618,7 @@ def internal_report(body: InternalTargetRequest, db: Session = Depends(get_db)):
 
 @router.post("/report")
 def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_db)):
+
     prediction_record = (
         db.query(Prediction)
         .filter(Prediction.lab_test_id == body.target_id)
@@ -617,7 +637,9 @@ def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_d
             detail="Report PDF is not available for low risk predictions.",
         )
 
+    # generate PDF only if not exists
     if not prediction_record.pdf_binary:
+
         patient = _lab_test_by_id(db, body.target_id)
 
         user_record = (
@@ -625,6 +647,7 @@ def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_d
             .filter(User.national_id == patient.national_id)
             .first()
         )
+
         patient_name = user_record.username if user_record else "Anonymous"
 
         lab_record = (
@@ -675,30 +698,24 @@ def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_d
 
         if pdf_bytes:
             prediction_record.pdf_binary = pdf_bytes
-            prediction_record.report_generated_at = (
-                datetime.utcnow().isoformat()
-            )
+            prediction_record.report_generated_at = datetime.utcnow().isoformat()
             db.commit()
 
+    # final validation
     if not prediction_record.pdf_binary:
         raise HTTPException(
-            status_code=503,
-            detail=(
-                "PDF report could not be generated. On the AI host run: "
-                "`pip install playwright` then `playwright install chromium`. "
-                "Or use Python 3.11/3.12 with `pip install xhtml2pdf`, "
-                "or install Visual Studio Build Tools (C++) on Python 3.13."
-            ),
+            status_code=404,
+            detail="Report PDF not found or generation failed.",
         )
 
     return Response(
         content=prediction_record.pdf_binary,
         media_type="application/pdf",
         headers={
-            "Content-Disposition":
-                f"attachment; filename=artemis_report_labtest_{body.target_id}.pdf"
+            "Content-Disposition": f"attachment; filename=artemis_report_labtest_{body.target_id}.pdf"
         },
     )
+
 
 
 # ---------------- CSV ----------------
@@ -717,6 +734,9 @@ async def internal_predict_csv(file: UploadFile = File(...)):
 
     return df.to_dict(orient="records")
 @router.post("/predict-csv")
+
+@router.post("/predict-csv")
+
 async def internal_predict_csv(file: UploadFile = File(...)):
     """Batch CSV scoring — internal only (same as legacy /predict-csv)."""
     df = pd.read_csv(file.file)

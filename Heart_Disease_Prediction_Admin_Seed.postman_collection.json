@@ -6,6 +6,7 @@
 
 
 
+
     "description": "Seed & admin utilities for backend testing.\nBackend: http://localhost:5000",
 
     "description": "Seed & admin utilities (not a public frontend flow).\n\n- Labs: create/list (JWT on POST)\n- Hospitals: create/update/delete need JWT + x-admin-key (see requireAdminKey / ADMIN_API_KEY in Backend .env)\n- Lab tests: bulk CSV upload (JWT)\n- Predictions: same gateway as production — POST /api/predictions/start, GET .../shap, GET .../report (JWT). Do not call FastAPI :8000 for /predict, /shap, /report from clients.\n\nBackend: http://localhost:5000",
@@ -16,6 +17,13 @@
 
     "description": "Seed & admin utilities (not a public frontend flow).\n\n- Labs: create/list (JWT on POST)\n- Hospitals: create/update/delete need JWT + x-admin-key (see requireAdminKey / ADMIN_API_KEY in Backend .env)\n- Lab tests: CSV upload via /api/lab-portal with x-lab-key (LAB_API_KEY in Backend .env; no patient JWT). ECG WFDB: POST /api/lab-portal/ecg with x-lab-id.\n- Predictions: POST /api/predictions/start, GET .../shap, GET .../report (JWT). ECG patient flow: folder ECG — /api/ecg/*.\n\nBackend: http://localhost:5000",
     "description": "Seed & admin utilities (not a public frontend flow).\n\n- Labs: create/list (JWT on POST)\n- Hospitals: create/update/delete need JWT + x-admin-key (see requireAdminKey / ADMIN_API_KEY in Backend .env)\n- Lab tests: CSV upload via /api/lab-portal with x-lab-key (LAB_API_KEY in Backend .env; no patient JWT)\n- Predictions: same gateway as production — POST /api/predictions/start, GET .../shap, GET .../report (JWT). Do not call FastAPI :8000 for /predict, /shap, /report from clients.\n\nBackend: http://localhost:5000",
+
+    "description": "Seed & admin utilities (not a public frontend flow).\n\n- Labs: create/list (JWT on POST)\n- Hospitals: create/update/delete need JWT + x-admin-key (see requireAdminKey / ADMIN_API_KEY in Backend .env)\n- Lab tests: CSV upload via /api/lab-portal with x-lab-key (LAB_API_KEY in Backend .env; no patient JWT). ECG WFDB: POST /api/lab-portal/ecg with x-lab-id.\n- Predictions: POST /api/predictions/start, GET .../shap, GET .../report (JWT). ECG patient flow: folder ECG — /api/ecg/*.\n\nBackend: http://localhost:5000",
+
+    "description": "Seed & admin utilities (not a public frontend flow).\n\n- Labs: create/list (JWT on POST)\n- Hospitals: create/update/delete need JWT + x-admin-key (see requireAdminKey / ADMIN_API_KEY in Backend .env)\n- Lab tests: CSV upload via /api/lab-portal with x-lab-key (LAB_API_KEY in Backend .env; no patient JWT)\n- Predictions: same gateway as production — POST /api/predictions/start, GET .../shap, GET .../report (JWT). Do not call FastAPI :8000 for /predict, /shap, /report from clients.\n\nBackend: http://localhost:5000",
+
+    "description": "Seed & admin utilities (not a public frontend flow).\n\n- Labs: create/list (JWT on POST)\n- Hospitals: create/update/delete need JWT + x-admin-key (see requireAdminKey / ADMIN_API_KEY in Backend .env)\n- Lab tests: CSV upload via /api/lab-portal with x-lab-key (LAB_API_KEY in Backend .env; no patient JWT)\n- Predictions: same gateway as production — POST /api/predictions/start, GET .../shap, GET .../report (JWT). Do not call FastAPI :8000 for /predict, /shap, /report from clients.\n\nBackend: http://localhost:5000",
+
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -31,6 +39,10 @@
     { "key": "ecg_test_id", "value": "", "type": "string" }
 
     { "key": "prediction_id", "value": "", "type": "string" }
+
+
+    { "key": "prediction_id", "value": "", "type": "string" }
+
   ],
   "item": [
     {
@@ -386,6 +398,8 @@ D
                   "if (pm.response.code === 201 && json.data && json.data.lab_test_id) {",
                   "  pm.environment.set('labtest_id', json.data.lab_test_id);",
                   "  pm.collectionVariables.set('labtest_id', json.data.lab_test_id);",
+
+
 
                   "}"
                 ]

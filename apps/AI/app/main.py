@@ -11,7 +11,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
+
 from app.api.router import api_router
+
 
 if not (os.getenv("INTERNAL_API_KEY") or "").strip():
     print(
@@ -49,6 +51,7 @@ app.include_router(api_router)
 
 if __name__ == "__main__":
     import uvicorn
+
 
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)
 

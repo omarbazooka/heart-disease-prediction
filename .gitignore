@@ -9,14 +9,17 @@ apps/AI/.env
 apps/Backend/.env
 
 # Python
+
 Project/node_modules
 /images
 .env
 apps/AI/.env
+
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
 
 # Virtual environments
 .venv/
@@ -36,6 +39,7 @@ ENV/
 
 Thumbs.db
 
+
 Project/node_modules
 /images
 
@@ -43,8 +47,12 @@ Thumbs.db
 
 Thumbs.db
 
+
 .venv/
 venv/
 ENV/
 .vscode/
+
+.idea/
+
 .idea/

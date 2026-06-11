@@ -151,6 +151,7 @@ def generate_shap_waterfall_chart(shap_tuple: tuple) -> str:
         return _fig_to_b64(fig)
 
 
+<<<<<<< HEAD
 def generate_ecg_top5_chart_png_bytes(top5: list[dict], *, compact: bool = False) -> bytes:
     """
     Horizontal bar chart of ECG multi-label top-5 probabilities (%).
@@ -206,6 +207,8 @@ def generate_ecg_top5_chart_png_bytes(top5: list[dict], *, compact: bool = False
         return buf.getvalue()
 
 
+=======
+>>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
 def clear_chart_cache() -> None:
     """Manually clear the lru_cache for both chart functions."""
     generate_feature_importance_chart.cache_clear()

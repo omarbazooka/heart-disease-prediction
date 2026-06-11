@@ -5,8 +5,11 @@ joblib>=1.3.0
 
 # ── Machine Learning ───────────────────────────────────────────────────────
 <<<<<<< HEAD
+<<<<<<< HEAD
 torch>=2.1.0
 wfdb>=4.1.0
+=======
+>>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
 =======
 >>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
 scikit-learn>=1.3.0
@@ -38,10 +41,15 @@ requests
 # ── Report Generation (HTML → PDF pipeline) ────────────────────────────────
 jinja2                # HTML templating
 <<<<<<< HEAD
+<<<<<<< HEAD
 playwright>=1.40      # HTML→PDF via Chromium (Windows-friendly; then: playwright install chromium)
 pdfkit                # Fallback HTML → PDF (requires wkhtmltopdf binary)
 # xhtml2pdf is optional: on Python 3.13 + Windows it pulls python-bidi (Rust)
 # and fails without Visual Studio Build Tools. Playwright is tried first in code.
+=======
+xhtml2pdf             # Primary HTML → PDF (no external binaries needed)
+pdfkit                # Fallback HTML → PDF (requires wkhtmltopdf binary)
+>>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
 =======
 xhtml2pdf             # Primary HTML → PDF (no external binaries needed)
 pdfkit                # Fallback HTML → PDF (requires wkhtmltopdf binary)
