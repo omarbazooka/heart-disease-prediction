@@ -34,4 +34,3 @@ def get_user(id: str, db: Session = Depends(get_db)):
         },
         "prediction": prediction_record.prediction_result if prediction_record else None
     }
-

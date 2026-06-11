@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from services.risk_classifier import assess_risk, RiskAssessment
+from app.services.risk_classifier import assess_risk, RiskAssessment
 
 API_URL = "https://omarbm52-artemis-heart-api.hf.space/predict"
 

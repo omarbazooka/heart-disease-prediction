@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 
-from services.pdf_exporter import html_to_pdf
+from app.services.pdf_exporter import html_to_pdf
 
 def generate_medical_report_pdf(patient_data, risk_score, llm_report, images_base64, lab_data=None, lab_test_data=None):
     """
@@ -85,8 +85,7 @@ def generate_ecg_medical_report_pdf(
     """
     import base64
 
-    from services.chart_service import generate_ecg_top5_chart_png_bytes
-
+    from app.services.chart_service import generate_ecg_top5_chart_png_bytes
     current_dir = os.path.dirname(os.path.abspath(__file__))
     templates_dir = os.path.join(os.path.dirname(current_dir), "templates")
     env = Environment(loader=FileSystemLoader(templates_dir))

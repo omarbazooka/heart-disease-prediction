@@ -9,6 +9,10 @@ apps/AI/.env
 apps/Backend/.env
 
 # Python
+Project/node_modules
+/images
+.env
+apps/AI/.env
 __pycache__/
 *.pyc
 *.pyo
@@ -29,9 +33,18 @@ ENV/
 # OS files
 .DS_Store
 
+
 Thumbs.db
 
 Project/node_modules
 /images
 
 Thumbs.db
+
+Thumbs.db
+
+.venv/
+venv/
+ENV/
+.vscode/
+.idea/

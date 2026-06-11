@@ -208,7 +208,6 @@ def get_prediction(id: str, db: Session = Depends(get_db)):
         "decision":    prediction_record.decision,
     }
 
-
 @router.post("/predict-csv")
 async def predict_csv(file: UploadFile = File(...)):
     df = pd.read_csv(file.file)

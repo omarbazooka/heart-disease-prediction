@@ -58,4 +58,3 @@ def get_prediction_report(id: str, db: Session = Depends(get_db)):
             "Content-Disposition": f"attachment; filename=artemis_report_patient_{id}.pdf"
         },
     )
-

@@ -20,6 +20,7 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.core.security import verify_internal_api_key
+
 from db.database import get_db
 from db.models import Lab, LabTest, Prediction, User
 from schemas.internal import InternalTargetRequest
@@ -28,6 +29,13 @@ from services import chart_service
 
 from services.ml_service import ml_service
 from services.pdf_service import generate_medical_report_pdf
+
+from app.db.database import get_db
+from app.db.models import Lab, LabTest, Prediction, User
+from app.schemas.internal import InternalTargetRequest
+from app.services import chart_service
+from app.services.ml_service import ml_service
+from app.services.pdf_service import generate_medical_report_pdf
 
 AI_DIR = Path(__file__).resolve().parent.parent.parent.parent
 if str(AI_DIR) not in sys.path:
@@ -78,6 +86,7 @@ def _apply_user_id(prediction_record: Prediction, user_id: str | None, db: Sessi
     if user_id and prediction_record.user_id != user_id:
         prediction_record.user_id = user_id
         db.commit()
+
 
 
 def _generate_medical_pdf_bytes(
@@ -144,6 +153,7 @@ def _generate_medical_pdf_bytes(
     except Exception as e:
         print(f"Warning: PDF report generation failed: {e}")
         return None
+
 
 
 @router.post("/predict")
@@ -294,6 +304,12 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
         image_bytes = ml_service.generate_shap_image(shap_data)
         prediction_record.shap_image = image_bytes
 
+
+        shap_tuple = tuple(sorted(shap_data.items()))
+        feat_chart = chart_service.generate_feature_importance_chart(shap_tuple)
+        shap_chart = chart_service.generate_shap_waterfall_chart(shap_tuple)
+
+
         if consultant:
             top_features = sorted(shap_data.items(), key=lambda x: abs(x[1]), reverse=True)[:3]
             try:
@@ -321,6 +337,57 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
         else:
             prediction_record.pdf_binary = None
             prediction_record.report_generated_at = None
+
+        patient_data = {
+            "name": patient_name,
+            "gender": "Male" if patient.sex == 1 else "Female",
+            "dob": "N/A",
+            "national_id": patient.national_id or "N/A",
+            "address": "N/A",
+            "age": patient.age,
+            "cp": patient.chest_pain_type,
+            "trestbps": patient.resting_bp_s,
+            "chol": patient.cholesterol,
+            "fbs": patient.fasting_blood_sugar,
+            "restecg": patient.resting_ecg,
+            "thalach": patient.max_heart_rate,
+            "exang": "Yes" if patient.exercise_angina == 1 else "No",
+            "oldpeak": patient.oldpeak,
+            "slope": patient.st_slope,
+        }
+
+        risk_score = (
+            round(prediction_record.prediction_percentage, 1)
+            if prediction_record.prediction_percentage
+            else 0.0
+        )
+        llm_report = {
+            "summary": llm_result.get("explanation", ""),
+            "recommendations": llm_result.get("recommendations", []),
+        }
+        images_base64 = {
+            "university_logo": "",
+            "risk_gauge": feat_chart,
+            "shap_plot": shap_chart,
+        }
+        lab_data = {
+            "name": lab_record.name if lab_record else "N/A",
+            "address": lab_record.address if lab_record else "N/A",
+        }
+        lab_test_data = {"id": patient.id}
+
+        pdf_bytes_io = generate_medical_report_pdf(
+            patient_data=patient_data,
+            risk_score=risk_score,
+            llm_report=llm_report,
+            images_base64=images_base64,
+            lab_data=lab_data,
+            lab_test_data=lab_test_data,
+        )
+
+        prediction_record.pdf_binary = pdf_bytes_io.getvalue()
+        prediction_record.report_generated_at = datetime.utcnow().isoformat()
+
     else:
         prediction_record.shap_image = None
         prediction_record.llm_report_json = None
@@ -532,23 +599,42 @@ def internal_report(body: InternalTargetRequest, db: Session = Depends(get_db)):
 
 @router.post("/report")
 def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_db)):
-    prediction_record = db.query(Prediction).filter(Prediction.lab_test_id == body.target_id).first()
+    prediction_record = (
+        db.query(Prediction)
+        .filter(Prediction.lab_test_id == body.target_id)
+        .first()
+    )
+
     if not prediction_record:
         raise HTTPException(
             status_code=400,
             detail="Prediction has not been evaluated yet. Call POST /internal/predict first.",
         )
+
     if prediction_record.decision == "low":
         raise HTTPException(
             status_code=400,
             detail="Report PDF is not available for low risk predictions.",
         )
+
     if not prediction_record.pdf_binary:
         patient = _lab_test_by_id(db, body.target_id)
-        user_record = db.query(User).filter(User.national_id == patient.national_id).first()
+
+        user_record = (
+            db.query(User)
+            .filter(User.national_id == patient.national_id)
+            .first()
+        )
         patient_name = user_record.username if user_record else "Anonymous"
-        lab_record = db.query(Lab).filter(Lab.id == patient.lab_id).first()
+
+        lab_record = (
+            db.query(Lab)
+            .filter(Lab.id == patient.lab_id)
+            .first()
+        )
+
         raw_shap = prediction_record.shap_values_json
+
         if raw_shap:
             shap_data = ml_service._normalize_shap_dict(raw_shap)
         else:
@@ -566,18 +652,32 @@ def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_d
                 patient.st_slope,
             ]
             _, shap_data = ml_service.assess_full_prediction(data)
+
         raw_llm = prediction_record.llm_report_json
+
         llm_result = (
             raw_llm
             if isinstance(raw_llm, dict)
-            else {"explanation": "Report data unavailable.", "recommendations": []}
+            else {
+                "explanation": "Report data unavailable.",
+                "recommendations": [],
+            }
         )
+
         pdf_bytes = _generate_medical_pdf_bytes(
-            patient, prediction_record, patient_name, lab_record, shap_data, llm_result
+            patient,
+            prediction_record,
+            patient_name,
+            lab_record,
+            shap_data,
+            llm_result,
         )
+
         if pdf_bytes:
             prediction_record.pdf_binary = pdf_bytes
-            prediction_record.report_generated_at = datetime.utcnow().isoformat()
+            prediction_record.report_generated_at = (
+                datetime.utcnow().isoformat()
+            )
             db.commit()
 
     if not prediction_record.pdf_binary:
@@ -586,14 +686,17 @@ def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_d
             detail=(
                 "PDF report could not be generated. On the AI host run: "
                 "`pip install playwright` then `playwright install chromium`. "
-                "Or use Python 3.11/3.12 with `pip install xhtml2pdf`, or install Visual Studio Build Tools (C++) on Python 3.13."
+                "Or use Python 3.11/3.12 with `pip install xhtml2pdf`, "
+                "or install Visual Studio Build Tools (C++) on Python 3.13."
             ),
         )
+
     return Response(
         content=prediction_record.pdf_binary,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f"attachment; filename=artemis_report_labtest_{body.target_id}.pdf"
+            "Content-Disposition":
+                f"attachment; filename=artemis_report_labtest_{body.target_id}.pdf"
         },
     )
 

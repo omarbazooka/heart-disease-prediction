@@ -102,7 +102,6 @@ def html_to_pdf(html: str) -> bytes:
         errors["xhtml2pdf"] = str(e)
         print(f"[pdf_exporter] xhtml2pdf failed: {e}")
 
-
     # ── 4. pdfkit (needs wkhtmltopdf binary) ──────────────────────────
     try:
         import pdfkit
