@@ -11,13 +11,15 @@
 /* ================= GLOBAL ================= */
 
 body {
-
-  font-family:
-    "DM Sans",
-    "Segoe UI",
-    sans-serif;
-
-  margin: 0;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  min-height: 100vh;
+   background: linear-gradient(
+    to right,
+    rgba(78, 160, 177, 0.3) 0%,
+    #ffffff 10%,
+    #ffffff 90%,
+    rgba(17, 152, 183, 0.3) 100%
+  ) !important ;
 }
 
 .home-page {

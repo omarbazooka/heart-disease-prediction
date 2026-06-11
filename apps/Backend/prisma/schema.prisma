@@ -7,16 +7,15 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  national_id String   @unique
-  username    String
-  email       String   @unique
-  password    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  predictions Prediction[]
-  ecgTests    EcgTest[]
+  id            String         @id @default(cuid())
+  national_id   String         @unique
+  username      String
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  ecgTests      EcgTest[]
+  predictions   Prediction[]
   refreshTokens RefreshToken[]
 
   @@map("users")
@@ -29,42 +28,41 @@ model Lab {
   address   String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  labTests  LabTest[]
   ecgTests  EcgTest[]
+  labTests  LabTest[]
 
   @@map("labs")
 }
 
 model LabTest {
-  id                    String   @id @default(cuid())
-  lab_id                String
-  national_id           String
-  age                   Float
-  sex                   Int
-  chest_pain_type       Int
-  resting_bp_s          Float
-  cholesterol           Float
-  fasting_blood_sugar   Int
-  resting_ecg           Int
-  max_heart_rate        Float
-  exercise_angina       Int
-  oldpeak               Float
-  st_slope              Int
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  
-  lab                   Lab      @relation(fields: [lab_id], references: [id], onDelete: Cascade)
-  prediction            Prediction?
+  id                  String      @id @default(cuid())
+  lab_id              String
+  national_id         String
+  age                 Float
+  sex                 Int
+  chest_pain_type     Int
+  resting_bp_s        Float
+  cholesterol         Float
+  fasting_blood_sugar Int
+  resting_ecg         Int
+  max_heart_rate      Float
+  exercise_angina     Int
+  oldpeak             Float
+  st_slope            Int
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  lab                 Lab         @relation(fields: [lab_id], references: [id], onDelete: Cascade)
+  prediction          Prediction?
 
   @@index([national_id])
   @@map("lab_tests")
 }
 
 model Prediction {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   user_id               String?
-  lab_test_id           String   @unique
-  prediction_result     Int?     
+  lab_test_id           String    @unique
+  prediction_result     Int?
   prediction_percentage Float?
   risk_level            String?
   decision              String?
@@ -75,9 +73,8 @@ model Prediction {
   report_generated_at   String?
   createdAt             DateTime? @default(now())
   updatedAt             DateTime? @updatedAt
-  
-  labTest               LabTest  @relation(fields: [lab_test_id], references: [id], onDelete: Cascade)
-  user                  User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  labTest               LabTest   @relation(fields: [lab_test_id], references: [id], onDelete: Cascade)
+  user                  User?     @relation(fields: [user_id], references: [id])
 
   @@map("predictions")
 }
@@ -95,44 +92,36 @@ model Hospital {
 
 /// WFDB ECG uploads and AI pipeline results (separate from lab_tests / predictions).
 model EcgTest {
-  id                    String    @id @default(cuid())
-  lab_id                String
-  national_id           String
-  user_id               String?
-
-  dat_file_path         String?
-  hea_file_path         String?
-  original_dat_name     String?
-  original_hea_name     String?
-  storage_backend       String    @default("local")
-  file_size_bytes       Int?
-  checksum_dat          String?
-  checksum_hea          String?
-
-  primary_diagnosis     String?
-  primary_probability   Float?
-  detailed_results_json Json?
-
-  model_name            String?
-  model_version         String?
-  inference_status      String    @default("pending")
-  inference_error       String?
-  inferred_at           DateTime?
-
-  llm_ecg_json          Json?
-  llm_model             String?
-  llm_prompt_version    String?
-
+  id                      String    @id @default(cuid())
+  lab_id                  String
+  national_id             String
+  user_id                 String?
+  dat_file_path           String?
+  hea_file_path           String?
+  original_dat_name       String?
+  original_hea_name       String?
+  storage_backend         String    @default("local")
+  file_size_bytes         Int?
+  checksum_dat            String?
+  checksum_hea            String?
+  primary_diagnosis       String?
+  primary_probability     Float?
+  detailed_results_json   Json?
+  model_name              String?
+  model_version           String?
+  inference_status        String    @default("pending")
+  inference_error         String?
+  inferred_at             DateTime?
+  llm_ecg_json            Json?
+  llm_model               String?
+  llm_prompt_version      String?
   prediction_completed_at DateTime?
-
-  uploaded_by           String    @default("lab_portal")
-  client_request_id     String?
-
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  lab                   Lab       @relation(fields: [lab_id], references: [id], onDelete: Cascade)
-  user                  User?     @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  uploaded_by             String    @default("lab_portal")
+  client_request_id       String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  lab                     Lab       @relation(fields: [lab_id], references: [id], onDelete: Cascade)
+  user                    User?     @relation(fields: [user_id], references: [id])
 
   @@index([national_id, createdAt])
   @@index([lab_id])
@@ -145,7 +134,6 @@ model RefreshToken {
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")

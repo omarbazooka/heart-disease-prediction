@@ -7,7 +7,15 @@
   --border-light: #e0eef3;
 }
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  min-height: 100vh;
+   background: linear-gradient(
+    to right,
+    rgba(78, 160, 177, 0.3) 0%,
+    #ffffff 10%,
+    #ffffff 90%,
+    rgba(17, 152, 183, 0.3) 100%
+  ) !important ;
 }
 .home-page {
   margin: 0 auto;

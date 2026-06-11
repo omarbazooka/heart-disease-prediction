@@ -25,48 +25,64 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg px-4 py-2">
+    <nav className="navbar navbar-expand-lg navbar-light px-4 py-2">
 
       {/* Logo */}
-      <div className="d-flex align-items-center gap-2">
+      <Link
+        to="/the_general"
+        className="d-flex align-items-center gap-2 text-decoration-none"
+      >
         <img src={logo} className="logo" alt="logo" />
         <span className="brand">Heart Diseases</span>
-      </div>
+      </Link>
 
-      {/* Toggle */}
+      {/* Toggle Button */}
       <button
         className="navbar-toggler"
         type="button"
         data-bs-toggle="collapse"
         data-bs-target="#navbarContent"
+        aria-controls="navbarContent"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
       >
         <span className="navbar-toggler-icon"></span>
       </button>
 
-      {/* Content */}
+      {/* Navbar Content */}
       <div
-        className="collapse navbar-collapse justify-content-between"
+        className="collapse navbar-collapse"
         id="navbarContent"
       >
-
         {/* Links */}
         <ul className="navbar-nav mx-auto text-center gap-lg-4">
           <li className="nav-item">
-            <Link className="nav-link" to="/the_general">HOME</Link>
+            <Link className="nav-link" to="/the_general">
+              HOME
+            </Link>
           </li>
+
           <li className="nav-item">
-            <Link className="nav-link" to="/docs">DOCS</Link>
+            <Link className="nav-link" to="/docs">
+              DOCS
+            </Link>
           </li>
+
           <li className="nav-item">
-            <Link className="nav-link" to="/heart">HEART</Link>
+            <Link className="nav-link" to="/heart">
+              HEART
+            </Link>
           </li>
+
           <li className="nav-item">
-            <Link className="nav-link" to="/about">ABOUT</Link>
+            <Link className="nav-link" to="/about">
+              ABOUT
+            </Link>
           </li>
         </ul>
 
-        {/* Buttons */}
-        <div className="d-flex justify-content-center gap-2 mt-3 mt-lg-0">
+        {/* Right Buttons */}
+        <div className="d-flex flex-column flex-lg-row justify-content-center align-items-center gap-2 mt-3 mt-lg-0">
 
           {!isLogged ? (
             <>
@@ -95,10 +111,14 @@ export default function Navbar() {
             <>
               <button
                 onClick={() => navigate("/profile")}
-                className="custom-btn rounded-pill px-2"
+                className="custom-btn rounded-pill px-3 py-2 d-flex align-items-center gap-2"
               >
                 My Dashboard
-                <img src={profile} className="profile" alt="profile" />
+                <img
+                  src={profile}
+                  className="profile"
+                  alt="profile"
+                />
               </button>
 
               <button
