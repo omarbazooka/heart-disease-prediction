@@ -17,6 +17,7 @@ model User {
 
   predictions Prediction[]
   ecgTests    EcgTest[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -136,4 +137,16 @@ model EcgTest {
   @@index([national_id, createdAt])
   @@index([lab_id])
   @@map("ecg_tests")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }

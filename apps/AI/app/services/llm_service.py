@@ -197,7 +197,7 @@ class HeartDiseaseConsultant:
             return {
                 "explanation":     f"Could not generate explanation: {str(e)}",
                 "recommendations": ["Please consult your physician for personalized recommendations."],
-<<<<<<< HEAD
+
             }
 
 
@@ -319,6 +319,5 @@ class EcgConsultant:
                     "Ensure blood pressure and glucose are managed if applicable.",
                     "Discuss whether ambulatory monitoring is appropriate.",
                 ],
-=======
->>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
+
             }

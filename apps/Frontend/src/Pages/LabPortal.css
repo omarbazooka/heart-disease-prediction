@@ -1,6 +1,6 @@
 .lab-portal-container {
   min-height: 100vh;
-  background: transparent;
+  background: linear-gradient(to right, rgba(78, 160, 177, 0.3), #ffffff 10%, #ffffff 90%, rgba(17, 152, 183, 0.3));
   padding: 40px 20px;
   font-family: "DM Sans", sans-serif;
 }

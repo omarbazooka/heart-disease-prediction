@@ -26,33 +26,19 @@ __pycache__/
 venv/
 ENV/
 
-# Editors
+# Editors / IDE
 .vscode/
 .idea/
+.cursor/
+
+# Logs and temp files
+*.log
+debug.log
+body_*.txt
 
 # Images / uploads
 /images
 
 # OS files
 .DS_Store
-
-
 Thumbs.db
-
-
-Project/node_modules
-/images
-
-Thumbs.db
-
-Thumbs.db
-
-
-.venv/
-venv/
-ENV/
-.vscode/
-
-.idea/
-
-.idea/

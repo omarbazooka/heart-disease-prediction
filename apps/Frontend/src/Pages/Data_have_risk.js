@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 import "../Pages/Data_have_risk.css";
-import "../fontawesome-free-7.0.0-web/css/all.min.css";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 import { useNavigate } from "react-router-dom";
 
@@ -314,7 +314,9 @@ function Home() {
 
             {Object.keys(hospitals).length > 0 ? (
 
-              Object.entries(hospitals).map(([area, areaHospitals]) => (
+              Object.entries(hospitals)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([area, areaHospitals]) => (
 
                 <div key={area} className="area-group">
 

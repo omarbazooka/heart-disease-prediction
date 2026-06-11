@@ -71,6 +71,9 @@ app.use(notFoundHandler);
 // Global error handler
 app.use(globalErrorHandler);
 
+const fs = require("fs");
+const https = require("https");
+
 // Start server + connect to Neon PostgreSQL
 const PORT = process.env.PORT || 5000;
 
@@ -78,7 +81,21 @@ async function startServer() {
   try {
     await prisma.$connect();
     console.log("PostgreSQL (Neon) Connected Successfully!");
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+    const sslKey = process.env.SSL_KEY_PATH;
+    const sslCert = process.env.SSL_CERT_PATH;
+
+    if (sslKey && sslCert && fs.existsSync(sslKey) && fs.existsSync(sslCert)) {
+      const options = {
+        key: fs.readFileSync(sslKey),
+        cert: fs.readFileSync(sslCert),
+      };
+      https.createServer(options, app).listen(PORT, () => {
+        console.log(`Secure Server running over HTTPS on port ${PORT}`);
+      });
+    } else {
+      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    }
   } catch (err) {
     console.error("Database connection failed:", err.message);
     process.exit(1);

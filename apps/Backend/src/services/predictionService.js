@@ -48,15 +48,6 @@ class PredictionService {
       throw err;
     }
 
-
-    const ai = await internalPredict(labTest.id.toString(), user.id.toString());
-
-    const ai = await internalPredict(labTest.id, user.id);
-
-    await prisma.prediction.updateMany({
-      where: { lab_test_id: labTest.id },
-      data: { user_id: user.id },
-
     // Check if prediction already exists for this lab test
     let existingPrediction = await prisma.prediction.findUnique({
       where: { lab_test_id: labTest.id }

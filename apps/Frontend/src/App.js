@@ -48,6 +48,7 @@ export default function App() {
   <Route path="/" element={<Navigate to="/heart" />} />
 
   {/* PUBLIC ROUTES */}
+
     <Route path="/" element={<Layout/>} />
     <Route path="/heart" element={<Heart />} />
     <Route path="/home" element={<Navigate to="/the_general" />} />
@@ -55,6 +56,14 @@ export default function App() {
     <Route path="/register" element={<Register />} />
     <Route path="/lab-portal" element={<LabPortal />} />
   
+
+  <Route path="/heart" element={<Heart />} />
+  <Route path="/home" element={<Navigate to="/the_general" />} />
+  <Route path="/login" element={<Login />} />
+  <Route path="/register" element={<Register />} />
+  <Route path="/lab-portal" element={<LabPortal />} />
+  <Route path="/learnmore" element={<Learnmore />} />
+
 
   {/* PROTECTED ROUTES */}
   <Route
@@ -107,15 +116,6 @@ export default function App() {
     element={
       <ProtectedRoute>
         <Profile />
-      </ProtectedRoute>
-    }
-  />
-
-  <Route
-    path="/learnmore"
-    element={
-      <ProtectedRoute>
-        <Learnmore />
       </ProtectedRoute>
     }
   />

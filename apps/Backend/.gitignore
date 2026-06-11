@@ -3,13 +3,9 @@ node_modules/
 
 # Environment variables
 .env
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 .env.example
-=======
->>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
-=======
->>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
+
 .env.local
 .env.*.local
 
@@ -39,13 +35,14 @@ coverage/
 tmp/
 temp/
 
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 # Uploaded ECG WFDB files (local disk storage)
 uploads/ecg/
-=======
+
 /generated/prisma
->>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
-=======
+
 /generated/prisma
->>>>>>> 3a5e7c62be61d9bf6bde782a67674acea097339c
+
+# Uploaded ECG WFDB files (local disk storage)
+uploads/ecg/
+

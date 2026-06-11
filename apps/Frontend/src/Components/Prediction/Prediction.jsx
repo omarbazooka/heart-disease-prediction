@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-
 import axios from "axios";
 
 import "./Prediction.css";
@@ -7,6 +6,41 @@ import "./Prediction.css";
 import { Link, useNavigate } from "react-router-dom";
 import { BsGeoAltFill } from "react-icons/bs";
 import { getLatestLabTest, startPrediction } from "../../services/api";
+import mokhtabarImg from "../../assets/mokhtabar.png";
+import borgImg from "../../assets/borg.png";
+import hassabImg from "../../assets/hassab.png";
+import royalImg from "../../assets/royal.png";
+import shamsImg from "../../assets/shams.png";
+import nileImg from "../../assets/nile.png";
+
+const labImages = {
+  "Al Mokhtabar labs": mokhtabarImg,
+  "AL Borg Labs": borgImg,
+  "Hassab Labs": hassabImg,
+  "Royal Labs": royalImg,
+  "Al Shams Labs": shamsImg,
+  "Al Nile Labs": nileImg,
+};
+
+const labLinks = {
+  "Al Mokhtabar labs":
+    "https://almokhtabar.com/ar/%d8%a7%d9%84%d9%81%d8%b1%d9%88%d8%b9/",
+
+  "AL Borg Labs":
+    "https://alborglab.com/branches/",
+
+  "Hassab Labs":
+    "https://hassab.com/site/ar/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+
+  "Royal Labs":
+    "https://royal-lab.net/ar/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+
+  "Al Shams Labs":
+    "http://alshamslabs.com/branches.aspx",
+
+  "Al Nile Labs":
+    "https://nilescanandlabs.net/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+};
 
 const Prediction = () => {
   // ================= STATE =================
@@ -38,46 +72,6 @@ const Prediction = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
-
-import {
-  BsGeoAltFill,
-} from "react-icons/bs";
-
-const Prediction = () => {
-
-  // ================= STATE =================
-  const [result, setResult] =
-    useState(null);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [labs, setLabs] =
-    useState([]);
-
-  const [hasLabTests, setHasLabTests] =
-    useState(false);
-
-  const [userLocation, setUserLocation] =
-    useState(null);
-
-  const navigate = useNavigate();
-
-  // ================= GET LABS + STATUS + LOCATION =================
-  useEffect(() => {
-
-    fetchLabs();
-
-    checkLabStatus();
-
-    navigator.geolocation.getCurrentPosition(
-
-      (position) => {
-
         setUserLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -88,25 +82,11 @@ const Prediction = () => {
         console.log(error);
       }
     );
-
-      },
-
-      (error) => {
-
-        console.log(error);
-
-      }
-
-    );
-
   }, []);
 
   // ================= FETCH LABS =================
   const fetchLabs = async () => {
-    
-
     try {
-
       const res = await axios.get(
         "http://localhost:5000/api/labs"
       );
@@ -165,59 +145,6 @@ const Prediction = () => {
       console.log(err);
 
       return null;
-
-      console.log(
-        "LABS => ",
-        res.data
-      );
-
-      setLabs(
-        res.data.data
-      );
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-  };
-
-  // ================= CHECK LAB TEST STATUS =================
-  const checkLabStatus = async () => {
-
-    try {
-
-      const token =
-        localStorage.getItem("token");
-
-      if (!token) return;
-
-      const res = await axios.get(
-
-        "http://localhost:5000/api/labtests/me/status",
-
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        }
-
-      );
-
-      console.log(
-        "LAB STATUS => ",
-        res.data
-      );
-
-      setHasLabTests(
-        res.data.data.hasLabTests
-      );
-
-    } catch (err) {
-
-      console.log(err);
-
     }
   };
 
@@ -336,151 +263,14 @@ const Prediction = () => {
         <div className="prediction-card">
           <h2>Loading...</h2>
         </div>
-  const handleStartPrediction =
-    async () => {
-
-      try {
-
-        setLoading(true);
-
-        const token =
-          localStorage.getItem("token");
-
-        // ================= CHECK LOGIN =================
-        if (!token) {
-
-          alert(
-            "Please Login First"
-          );
-
-          setLoading(false);
-
-          return;
-        }
-
-        // ================= CHECK LAB TESTS =================
-        if (!hasLabTests) {
-
-          alert(
-            "No lab test found. Please visit a trusted medical lab first."
-          );
-
-          setLoading(false);
-
-          return;
-        }
-
-        // ================= START PREDICTION =================
-        const res = await axios.post(
-
-          "http://localhost:5000/api/predictions/start",
-
-          {},
-
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-
-        );
-
-        console.log(
-          "FULL RESPONSE => ",
-          res.data
-        );
-
-        const predictionData =
-          res.data.data;
-
-        console.log(
-          "PREDICTION DATA => ",
-          predictionData
-        );
-
-        // ================= SAVE =================
-        localStorage.setItem(
-          "prediction",
-          JSON.stringify(
-            predictionData
-          )
-        );
-
-        localStorage.setItem(
-          "prediction_id",
-          predictionData.prediction_id
-        );
-
-        setResult(
-          predictionData
-        );
-
-        // ================= NAVIGATE =================
-        if (
-          predictionData.probability < 70
-        ) {
-
-
-          navigate(
-            "/have_no_risk"
-          );
-
-
-        } else {
-
-          navigate(
-            "/have_risk"
-          );
-
-        }
-
-      } catch (err) {
-
-        console.log(err);
-
-        alert(
-
-          err.response?.data?.message ||
-
-          "Prediction Failed"
-
-        );
-
-      } finally {
-
-        setLoading(false);
-
-      }
-    };
-
-    
-
-  // ================= LOADING =================
-  if (loading) {
-
-    return (
-
-      <div className="prediction-page">
-
-        <div className="prediction-card">
-
-          <h2>
-            Loading...
-          </h2>
-
-        </div>
-
       </div>
     );
   }
+  console.log(borgImg);
 
   // ================= UI =================
   return (
     <div className="prediction-page">
-
-    <div className="prediction-page">
-
       <div className="prediction-card">
 
         <h1>
@@ -495,18 +285,6 @@ const Prediction = () => {
           </span>
         </p>
 
-
-          Advanced AI Powered Analysis To Assess
-
-          <br />
-
-          <span>
-            Your Heart Health Risk Factors
-          </span>
-
-        </p>
-
-        {/* ================= BUTTONS ================= */}
         <div className="prediction-buttons">
 
           <button
@@ -514,9 +292,6 @@ const Prediction = () => {
             className="btn start"
           >
             Start Prediction →
-
-            Start Prediction →
-
           </button>
 
           <Link
@@ -524,9 +299,6 @@ const Prediction = () => {
             className="btn learn"
           >
             Learn More →
-
-            Learn More →
-
           </Link>
 
         </div>
@@ -539,20 +311,6 @@ const Prediction = () => {
             If the percentage is higher than 70%
             it means you have Heart Diseases
           </span>
-        {/* ================= REPORT ================= */}
-        <p className="report-title">
-
-          The Percentage That You Have Heart Diseases Or Not
-
-          <br />
-
-          <span className="highlight">
-
-            If the percentage is higher than 70%
-            it means you have Heart Diseases
-
-          </span>
-
         </p>
 
         <div className="report-box">
@@ -564,15 +322,6 @@ const Prediction = () => {
           </h4>
 
           <span>
-
-            {result?.probability != null
-              ? `${result.probability}%`
-              : "No Prediction Yet"}
-
-          </h4>
-
-          <span>
-
             {result
               ? result.decision_label
               : hasLabTests
@@ -583,16 +332,10 @@ const Prediction = () => {
         </div>
 
         <p className="info-text">
-
           {hasLabTests
             ? "Your Lab Results Are Ready For Prediction"
-            : "You Should Go To Trusted Medical Labs So They Can Upload Your Results"}
-        </p>
 
 
-          {hasLabTests
-
-            ? "Your Lab Results Are Ready For Prediction"
 
             : "You Should Go To Trusted Medical Labs So You Can Start Prediction"}
 
@@ -610,11 +353,6 @@ const Prediction = () => {
                   Trusted Medical Labs
                 </h3>
 
-
-              <p className="labs-sub">
-                There Is Thousands Of Trusted Medical Labs
-              </p>
-
                 <p className="labs-sub">
 
                   There Is Thousands Of Trusted Medical Labs
@@ -627,139 +365,45 @@ const Prediction = () => {
 
             {/* ================= DYNAMIC LABS ================= */}
             <div className="labs-wrapper">
+  {labs.map((lab) => (
+    
+    <a
+  key={lab.id}
+  href={labLinks[lab.name]}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="lab-card"
+>
+     
+       <img
+    src={labImages[lab.name]}
+    alt={lab.name}
+    className="lab-image"
+  />
 
-              {labs.map((lab) => (
 
-                <a
-                  key={lab.id}
+       <div className="lab-details">
+    <div className="lab-header">
+      <h4>{lab.name}</h4>
 
-                  href={
-                    userLocation
+      <span className="lab-rating">
+        ⭐ {lab.rating}
+      </span>
+    </div>
 
-                      ? `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(lab.address)}`
-
-                      : `https://www.google.com/maps/search/${encodeURIComponent(lab.address)}`
-                  }
-
-                  target="_blank"
-
-                  rel="noopener noreferrer"
-
-                  className="lab-card"
-                >
-
-                  <div className="lab-content">
-
-                    <div className="lab-title-row">
-
-                      <h4>
-                        {lab.name}
-                      </h4>
-
-                      <span className="rating-badge">
-                        Lab
-                      </span>
-
-                    </div>
-
-                    <div className="lab-info">
-
-                      <p>
-
-                        <BsGeoAltFill />
-
-                        {lab.address}
-
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </a>
-
-              ))}
-
-            </div>
+      <p className="lab-address">
+      <BsGeoAltFill />
+      {lab.address}
+    </p>
+      </div>
+    </a>
+  ))}
+</div>
 
           </div>
-
-          {/* ================= DYNAMIC LABS ================= */}
-          <div className="labs-wrapper">
-
-            {labs.map((lab) => (
-
-              <a
-                key={lab.id}
-                href={
-                  userLocation
-                    ? `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(lab.address)}`
-                    : `https://www.google.com/maps/search/${encodeURIComponent(lab.address)}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-
-
-                href={
-                  userLocation
-
-                    ? `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(lab.address)}`
-
-                    : `https://www.google.com/maps/search/${encodeURIComponent(lab.address)}`
-                }
-
-                target="_blank"
-
-                rel="noopener noreferrer"
-
-                className="lab-card"
-              >
-
-                <div className="lab-content">
-
-                  <div className="lab-title-row">
-
-                    <h4>{lab.name}</h4>
-                    <h4>
-                      {lab.name}
-                    </h4>
-
-                    <span className="rating-badge">
-                      Lab
-                    </span>
-
-                  </div>
-
-                  <div className="lab-info">
-                    <p>
-                      <BsGeoAltFill />
-                      {lab.address}
-                    </p>
-
-                    <p>
-
-                      <BsGeoAltFill />
-
-                      {lab.address}
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </a>
-
-            ))}
-
-          </div>
-
-        </div>
         )}
 
       </div>
-
-
     </div>
   );
 };

@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.core.security import verify_internal_api_key
+from core.security import verify_internal_api_key
 from data.ecg_diagnosis_kb import build_kb_context_for_top5
 from services.chart_service import generate_ecg_top5_chart_png_bytes
 from services.ecg_service import get_ecg_predictor
