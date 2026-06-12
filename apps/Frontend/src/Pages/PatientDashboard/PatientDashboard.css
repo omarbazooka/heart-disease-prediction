@@ -19,22 +19,17 @@ body {
   min-height: 100vh;
    background: linear-gradient(
     to right,
-    rgba(78, 160, 177, 0.3) 0%,
-    #ffffff 10%,
-    #ffffff 90%,
-    rgba(17, 152, 183, 0.3) 100%
-  ) !important ;
-}
-
-.pd-page {
-  min-height: 100vh;
-  background: linear-gradient(
-    to right,
     rgba(78, 160, 177, 0.22) 0%,
     var(--pd-bg) 12%,
     var(--pd-bg) 88%,
     rgba(17, 152, 183, 0.22) 100%
-  );
+  )
+  !important ;
+}
+
+.pd-page {
+  min-height: 100vh;
+  
   padding: 24px 20px 48px;
   font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
   color: var(--pd-text);

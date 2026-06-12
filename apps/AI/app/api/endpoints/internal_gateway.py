@@ -1,11 +1,11 @@
-
+"""
 Internal AI routes — callable ONLY by the Node.js gateway with X-INTERNAL-API-KEY.
 
 Security decisions:
 - No national_id fallback on internal routes (strict lab_tests.id only) to reduce IDOR surface.
 - Public /predict, /shap, /report are removed from the app router; use these POST endpoints only.
 
-
+"""
 from __future__ import annotations
 
 import io
@@ -108,7 +108,7 @@ def _generate_medical_pdf_bytes(
     shap_data: dict,
     llm_result: dict,
 ) -> bytes | None:
-   Charts + HTML→PDF. Returns None on failure (logged).
+    """Charts + HTML→PDF. Returns None on failure (logged)."""
     try:
         shap_tuple = tuple(sorted(shap_data.items()))
         feat_chart = chart_service.generate_feature_importance_chart(shap_tuple)
@@ -194,7 +194,7 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
             "prediction": prediction.prediction_result,
             "probability": prediction.prediction_percentage,
             "risk_level": prediction.risk_level,
-            "decision": prediction.decision,
+            "decision": prediction.decision,}
     user_record = db.query(User).filter(User.national_id == patient.national_id).first()
     patient_name = user_record.username if user_record else "Anonymous"
     lab_record = db.query(Lab).filter(Lab.id == patient.lab_id).first()
@@ -217,26 +217,25 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
         }
 
     # ---------------- INPUT ----------------
-    features = [
-    data = [
-        patient.age,
-        patient.sex,
-        patient.chest_pain_type,
-        patient.resting_bp_s,
-        patient.cholesterol,
-        patient.fasting_blood_sugar,
-        patient.resting_ecg,
-        patient.max_heart_rate,
-        patient.exercise_angina,
-        patient.oldpeak,
-        patient.st_slope,
-    ]
+    # ---------------- INPUT ----------------
+features = [
+    patient.age,
+    patient.sex,
+    patient.chest_pain_type,
+    patient.resting_bp_s,
+    patient.cholesterol,
+    patient.fasting_blood_sugar,
+    patient.resting_ecg,
+    patient.max_heart_rate,
+    patient.exercise_angina,
+    patient.oldpeak,
+    patient.st_slope,
+]
 
-    try:
-        assessment, shap_data = ml_service.assess_full_prediction(features)
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=str(e))
-
+try:
+    assessment, shap_data = ml_service.assess_full_prediction(features)
+except Exception as e:
+    raise HTTPException(status_code=422, detail=str(e))
     # ---------------- DB UPSERT ----------------
     if not prediction:
         prediction = Prediction(
@@ -261,7 +260,7 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
     prediction.risk_level = assessment.risk_level.value
     prediction.decision = assessment.decision.value
     prediction.shap_values_json = shap_data
-
+        
     # ---------------- SHAP ----------------
     prediction.shap_image = ml_service.generate_shap_image(shap_data)
 
