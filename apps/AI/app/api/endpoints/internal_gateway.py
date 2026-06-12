@@ -4,8 +4,8 @@ Internal AI routes — callable ONLY by the Node.js gateway with X-INTERNAL-API-
 Security decisions:
 - No national_id fallback on internal routes (strict lab_tests.id only) to reduce IDOR surface.
 - Public /predict, /shap, /report are removed from the app router; use these POST endpoints only.
-
 """
+
 from __future__ import annotations
 
 import io
@@ -19,33 +19,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 
-
 from app.core.security import verify_internal_api_key
-
-from db.database import get_db
-from db.models import Lab, LabTest, Prediction, User
-from schemas.internal import InternalTargetRequest
-
-from services import chart_service
-
-from services.ml_service import ml_service
-from services.pdf_service import generate_medical_report_pdf
-
 from app.db.database import get_db
 from app.db.models import Lab, LabTest, Prediction, User
 from app.schemas.internal import InternalTargetRequest
 from app.services import chart_service
 from app.services.ml_service import ml_service
 from app.services.pdf_service import generate_medical_report_pdf
-
-from core.security import verify_internal_api_key
-from db.database import get_db
-from db.models import Lab, LabTest, Prediction, User
-from schemas.internal import InternalTargetRequest
-from services import chart_service
-from services.ml_service import ml_service
-from services.pdf_service import generate_medical_report_pdf
-
 
 AI_DIR = Path(__file__).resolve().parent.parent.parent.parent
 if str(AI_DIR) not in sys.path:
@@ -55,34 +35,15 @@ try:
     from app.services.llm_service import HeartDiseaseConsultant
 
     consultant = HeartDiseaseConsultant()
-except Exception:
-    consultant = None
-
-
-
-    consultant = HeartDiseaseConsultant()
 except Exception as e:
     print("Warning: Could not initialize HeartDiseaseConsultant:", e)
     consultant = None
-
 
 router = APIRouter(
     prefix="/internal",
     tags=["Internal AI"],
     dependencies=[Depends(verify_internal_api_key)],
 )
-
-
-# ---------------- HELPERS ----------------
-
-def _lab_test_by_id(db: Session, lab_test_id: str) -> LabTest:
-    obj = db.query(LabTest).filter(LabTest.id == lab_test_id).first()
-    if not obj:
-        raise HTTPException(status_code=404, detail="LabTest not found")
-    return obj
-
-
-# ---------------- PREDICT ----------------
 
 
 def _lab_test_by_id(db: Session, lab_test_id: str) -> LabTest:
@@ -96,8 +57,6 @@ def _apply_user_id(prediction_record: Prediction, user_id: str | None, db: Sessi
     if user_id and prediction_record.user_id != user_id:
         prediction_record.user_id = user_id
         db.commit()
-
-
 
 
 def _generate_medical_pdf_bytes(
@@ -166,35 +125,10 @@ def _generate_medical_pdf_bytes(
         return None
 
 
-
-
 @router.post("/predict")
 def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db)):
     patient = _lab_test_by_id(db, body.target_id)
 
-    user = db.query(User).filter(User.national_id == patient.national_id).first()
-    patient_name = user.username if user else "Anonymous"
-    lab = db.query(Lab).filter(Lab.id == patient.lab_id).first()
-
-    prediction = (
-        db.query(Prediction)
-        .filter(Prediction.lab_test_id == patient.id)
-        .first()
-    )
-
-    # ---------------- CACHE ----------------
-    if prediction and prediction.prediction_result is not None:
-        assessment, _ = ml_service.assess_full_prediction(
-            [], probability=prediction.prediction_percentage
-        )
-
-        return {
-            "id": prediction.id,
-            "lab_test_id": prediction.lab_test_id,
-            "prediction": prediction.prediction_result,
-            "probability": prediction.prediction_percentage,
-            "risk_level": prediction.risk_level,
-            "decision": prediction.decision,}
     user_record = db.query(User).filter(User.national_id == patient.national_id).first()
     patient_name = user_record.username if user_record else "Anonymous"
     lab_record = db.query(Lab).filter(Lab.id == patient.lab_id).first()
@@ -216,29 +150,21 @@ def internal_predict(body: InternalTargetRequest, db: Session = Depends(get_db))
             "decision_label": assessment.decision_label,
         }
 
-    # ---------------- INPUT ----------------
-    # ---------------- INPUT ----------------
-features = [
-    patient.age,
-    patient.sex,
-    patient.chest_pain_type,
-    patient.resting_bp_s,
-    patient.cholesterol,
-    patient.fasting_blood_sugar,
-    patient.resting_ecg,
-    patient.max_heart_rate,
-    patient.exercise_angina,
-    patient.oldpeak,
-    patient.st_slope,
-]
+    data = [
+        patient.age,
+        patient.sex,
+        patient.chest_pain_type,
+        patient.resting_bp_s,
+        patient.cholesterol,
+        patient.fasting_blood_sugar,
+        patient.resting_ecg,
+        patient.max_heart_rate,
+        patient.exercise_angina,
+        patient.oldpeak,
+        patient.st_slope,
+    ]
 
-try:
-    assessment, shap_data = ml_service.assess_full_prediction(features)
-except Exception as e:
-    raise HTTPException(status_code=422, detail=str(e))
-    # ---------------- DB UPSERT ----------------
-    if not prediction:
-        prediction = Prediction(
+    try:
         assessment, shap_data = ml_service.assess_full_prediction(data)
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Model inference failed: {str(e)}")
@@ -250,57 +176,6 @@ except Exception as e:
             lab_test_id=patient.id,
             user_id=body.user_id,
         )
-        db.add(prediction)
-
-    if body.user_id:
-        prediction.user_id = body.user_id
-
-    prediction.prediction_result = 1 if assessment.decision.value == "high" else 0
-    prediction.prediction_percentage = assessment.probability_pct
-    prediction.risk_level = assessment.risk_level.value
-    prediction.decision = assessment.decision.value
-    prediction.shap_values_json = shap_data
-        
-    # ---------------- SHAP ----------------
-    prediction.shap_image = ml_service.generate_shap_image(shap_data)
-
-    # ---------------- LLM ----------------
-    llm_result = {"explanation": "", "recommendations": []}
-
-    if consultant:
-        try:
-            top = sorted(shap_data.items(), key=lambda x: abs(x[1]), reverse=True)[:3]
-            llm_result = consultant.generate_report(
-                probability=assessment.probability_pct,
-                decision=assessment.decision.value,
-                ui_risk_level=assessment.risk_level.value,
-                top_features=top,
-            )
-        except Exception:
-            llm_result = {"explanation": "LLM failed", "recommendations": []}
-
-    prediction.llm_report_json = llm_result
-
-    # ---------------- PDF ----------------
-    try:
-        pdf = generate_medical_report_pdf(
-            patient_data={
-                "name": patient_name,
-                "age": patient.age,
-                "gender": "Male" if patient.sex == 1 else "Female",
-            },
-            risk_score=round(prediction.prediction_percentage or 0, 1),
-            llm_report=llm_result,
-            images_base64={"risk_gauge": "", "shap_plot": ""},
-            lab_data={"name": lab.name if lab else "N/A"},
-            lab_test_data={"id": patient.id},
-        )
-
-        prediction.pdf_binary = pdf.getvalue()
-        prediction.report_generated_at = datetime.utcnow().isoformat()
-
-    except Exception:
-        prediction.pdf_binary = None
         db.add(prediction_record)
     elif body.user_id:
         prediction_record.user_id = body.user_id
@@ -314,15 +189,6 @@ except Exception as e:
     if assessment.decision.value == "high":
         image_bytes = ml_service.generate_shap_image(shap_data)
         prediction_record.shap_image = image_bytes
-
-
-
-        shap_tuple = tuple(sorted(shap_data.items()))
-        feat_chart = chart_service.generate_feature_importance_chart(shap_tuple)
-        shap_chart = chart_service.generate_shap_waterfall_chart(shap_tuple)
-
-
-
 
         if consultant:
             top_features = sorted(shap_data.items(), key=lambda x: abs(x[1]), reverse=True)[:3]
@@ -342,7 +208,6 @@ except Exception as e:
             llm_result = {"explanation": "LLM Consultant is not initialized.", "recommendations": []}
             prediction_record.llm_report_json = llm_result
 
-
         pdf_bytes = _generate_medical_pdf_bytes(
             patient, prediction_record, patient_name, lab_record, shap_data, llm_result
         )
@@ -352,60 +217,6 @@ except Exception as e:
         else:
             prediction_record.pdf_binary = None
             prediction_record.report_generated_at = None
-
-
-        patient_data = {
-            "name": patient_name,
-            "gender": "Male" if patient.sex == 1 else "Female",
-            "dob": "N/A",
-            "national_id": patient.national_id or "N/A",
-            "address": "N/A",
-            "age": patient.age,
-            "cp": patient.chest_pain_type,
-            "trestbps": patient.resting_bp_s,
-            "chol": patient.cholesterol,
-            "fbs": patient.fasting_blood_sugar,
-            "restecg": patient.resting_ecg,
-            "thalach": patient.max_heart_rate,
-            "exang": "Yes" if patient.exercise_angina == 1 else "No",
-            "oldpeak": patient.oldpeak,
-            "slope": patient.st_slope,
-        }
-
-        risk_score = (
-            round(prediction_record.prediction_percentage, 1)
-            if prediction_record.prediction_percentage
-            else 0.0
-        )
-        llm_report = {
-            "summary": llm_result.get("explanation", ""),
-            "recommendations": llm_result.get("recommendations", []),
-        }
-        images_base64 = {
-            "university_logo": "",
-            "risk_gauge": feat_chart,
-            "shap_plot": shap_chart,
-        }
-        lab_data = {
-            "name": lab_record.name if lab_record else "N/A",
-            "address": lab_record.address if lab_record else "N/A",
-        }
-        lab_test_data = {"id": patient.id}
-
-        pdf_bytes_io = generate_medical_report_pdf(
-            patient_data=patient_data,
-            risk_score=risk_score,
-            llm_report=llm_report,
-            images_base64=images_base64,
-            lab_data=lab_data,
-            lab_test_data=lab_test_data,
-        )
-
-        prediction_record.pdf_binary = pdf_bytes_io.getvalue()
-        prediction_record.report_generated_at = datetime.utcnow().isoformat()
-
-
-
     else:
         prediction_record.shap_image = None
         prediction_record.llm_report_json = None
@@ -415,30 +226,6 @@ except Exception as e:
     db.commit()
 
     return {
-        "id": prediction.id,
-        "lab_test_id": prediction.lab_test_id,
-        "prediction": prediction.prediction_result,
-        "probability": prediction.prediction_percentage,
-        "risk_level": prediction.risk_level,
-        "decision": prediction.decision,
-    }
-
-
-# ---------------- SHAP IMAGE ----------------
-
-@router.post("/shap")
-def internal_shap(body: InternalTargetRequest, db: Session = Depends(get_db)):
-    patient = _lab_test_by_id(db, body.target_id)
-
-    prediction = db.query(Prediction).filter(
-        Prediction.lab_test_id == patient.id
-    ).first()
-
-    if not prediction:
-        raise HTTPException(400, "Run prediction first")
-
-    if not prediction.shap_image:
-        _, shap = ml_service.assess_full_prediction([
         "id": prediction_record.id,
         "lab_test_id": prediction_record.lab_test_id,
         "prediction": prediction_record.prediction_result,
@@ -478,30 +265,6 @@ def internal_shap_png(body: InternalTargetRequest, db: Session = Depends(get_db)
             patient.exercise_angina,
             patient.oldpeak,
             patient.st_slope,
-        ])
-
-        prediction.shap_image = ml_service.generate_shap_image(shap)
-        db.commit()
-
-    return StreamingResponse(io.BytesIO(prediction.shap_image), media_type="image/png")
-
-
-# ---------------- SHAP DATA ----------------
-
-@router.post("/shap/data")
-def internal_shap_data(body: InternalTargetRequest, db: Session = Depends(get_db)):
-    patient = _lab_test_by_id(db, body.target_id)
-
-    prediction = db.query(Prediction).filter(
-        Prediction.lab_test_id == patient.id
-    ).first()
-
-    if not prediction:
-        raise HTTPException(400, "Run prediction first")
-
-    shap = prediction.shap_values_json
-    if not shap:
-        _, shap = ml_service.assess_full_prediction([
         ]
         _, shap_data = ml_service.assess_full_prediction(data)
         image_bytes = ml_service.generate_shap_image(shap_data)
@@ -545,36 +308,6 @@ def internal_shap_data(body: InternalTargetRequest, db: Session = Depends(get_db
             patient.exercise_angina,
             patient.oldpeak,
             patient.st_slope,
-        ])
-        prediction.shap_values_json = shap
-        db.commit()
-
-    return {
-        "prediction_probability": prediction.prediction_percentage,
-        "risk_level": prediction.risk_level,
-        "top_features": sorted(shap.items(), key=lambda x: abs(x[1]), reverse=True),
-    }
-
-
-# ---------------- REPORT ----------------
-
-@router.post("/report")
-def internal_report(body: InternalTargetRequest, db: Session = Depends(get_db)):
-    prediction = db.query(Prediction).filter(
-        Prediction.lab_test_id == body.target_id
-    ).first()
-
-    if not prediction:
-        raise HTTPException(400, "Run prediction first")
-
-    if not prediction.pdf_binary:
-        raise HTTPException(404, "Report not generated")
-
-    return Response(
-        content=prediction.pdf_binary,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename=report_{body.target_id}.pdf"
         ]
         _, shap_data = ml_service.assess_full_prediction(data)
         prediction_record.shap_values_json = shap_data
@@ -617,46 +350,23 @@ def internal_report(body: InternalTargetRequest, db: Session = Depends(get_db)):
 
 @router.post("/report")
 def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_db)):
-
-    prediction_record = (
-        db.query(Prediction)
-        .filter(Prediction.lab_test_id == body.target_id)
-        .first()
-    )
-
+    prediction_record = db.query(Prediction).filter(Prediction.lab_test_id == body.target_id).first()
     if not prediction_record:
         raise HTTPException(
             status_code=400,
             detail="Prediction has not been evaluated yet. Call POST /internal/predict first.",
         )
-
     if prediction_record.decision == "low":
         raise HTTPException(
             status_code=400,
             detail="Report PDF is not available for low risk predictions.",
         )
-
-    # generate PDF only if not exists
     if not prediction_record.pdf_binary:
-
         patient = _lab_test_by_id(db, body.target_id)
-
-        user_record = (
-            db.query(User)
-            .filter(User.national_id == patient.national_id)
-            .first()
-        )
-
+        user_record = db.query(User).filter(User.national_id == patient.national_id).first()
         patient_name = user_record.username if user_record else "Anonymous"
-
-        lab_record = (
-            db.query(Lab)
-            .filter(Lab.id == patient.lab_id)
-            .first()
-        )
-
+        lab_record = db.query(Lab).filter(Lab.id == patient.lab_id).first()
         raw_shap = prediction_record.shap_values_json
-
         if raw_shap:
             shap_data = ml_service._normalize_shap_dict(raw_shap)
         else:
@@ -674,39 +384,29 @@ def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_d
                 patient.st_slope,
             ]
             _, shap_data = ml_service.assess_full_prediction(data)
-
         raw_llm = prediction_record.llm_report_json
-
         llm_result = (
             raw_llm
             if isinstance(raw_llm, dict)
-            else {
-                "explanation": "Report data unavailable.",
-                "recommendations": [],
-            }
+            else {"explanation": "Report data unavailable.", "recommendations": []}
         )
-
         pdf_bytes = _generate_medical_pdf_bytes(
-            patient,
-            prediction_record,
-            patient_name,
-            lab_record,
-            shap_data,
-            llm_result,
+            patient, prediction_record, patient_name, lab_record, shap_data, llm_result
         )
-
         if pdf_bytes:
             prediction_record.pdf_binary = pdf_bytes
             prediction_record.report_generated_at = datetime.utcnow().isoformat()
             db.commit()
 
-    # final validation
     if not prediction_record.pdf_binary:
         raise HTTPException(
-            status_code=404,
-            detail="Report PDF not found or generation failed.",
+            status_code=503,
+            detail=(
+                "PDF report could not be generated. On the AI host run: "
+                "`pip install playwright` then `playwright install chromium`. "
+                "Or use Python 3.11/3.12 with `pip install xhtml2pdf`, or install Visual Studio Build Tools (C++) on Python 3.13."
+            ),
         )
-
     return Response(
         content=prediction_record.pdf_binary,
         media_type="application/pdf",
@@ -716,26 +416,7 @@ def internal_report_pdf(body: InternalTargetRequest, db: Session = Depends(get_d
     )
 
 
-
-# ---------------- CSV ----------------
-
 @router.post("/predict-csv")
-async def internal_predict_csv(file: UploadFile = File(...)):
-    df = pd.read_csv(file.file)
-    df.columns = df.columns.str.strip()
-
-    missing = [c for c in ml_service.required_cols if c not in df.columns]
-    if missing:
-        raise HTTPException(422, f"Missing columns: {missing}")
-
-    preds = ml_service.predict_dataframe(df[ml_service.required_cols])
-    df["prediction"] = preds
-
-    return df.to_dict(orient="records")
-@router.post("/predict-csv")
-
-@router.post("/predict-csv")
-
 async def internal_predict_csv(file: UploadFile = File(...)):
     """Batch CSV scoring — internal only (same as legacy /predict-csv)."""
     df = pd.read_csv(file.file)

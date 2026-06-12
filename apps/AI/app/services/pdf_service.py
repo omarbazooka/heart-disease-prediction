@@ -89,7 +89,7 @@ def generate_ecg_medical_report_pdf(
     """
     import base64
 
-    from services.chart_service import generate_ecg_top5_chart_png_bytes
+    from app.services.chart_service import generate_ecg_top5_chart_png_bytes
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     templates_dir = os.path.join(os.path.dirname(current_dir), "templates")

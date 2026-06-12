@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 # Keep in sync with services/ecg_service.SCP_LABELS keys (all model classes should be covered via fallback).
-from services.ecg_service import SCP_LABELS
+from app.services.ecg_service import SCP_LABELS
 
 
 def _default_block(code: str, label: str) -> dict[str, str]:

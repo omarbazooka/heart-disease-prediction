@@ -30,9 +30,15 @@ nav li {
   width: 40px;
 }
 .profile {
-  width: 25px;
-} /* تخلي اللينكات تبقى واضحة */
+  width: 22px;
+
+  
+
+} 
+
+/* تخلي اللينكات ;تبقى واضحة */
 .nav-link {
+  
   color: #0f3d4c !important;
   font-weight: 500;
 } /* لما الشاشة تصغر */
@@ -47,9 +53,9 @@ nav li {
   color: #fff !important;
   font-weight: 500;
   transition: all 0.3s ease;
-  margin-right: 5px;
   letter-spacing: 3%;
   font-family: sans-serif;
+  
 }
 .custom-btn:hover {
   background-color: #0f86a3 !important;

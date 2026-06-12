@@ -3,9 +3,9 @@ from fastapi import APIRouter
 
 from app.api.endpoints import internal_gateway
 
-from api.endpoints import internal_gateway
+from app.api.endpoints import internal_gateway
 
-from api.endpoints import internal_gateway, internal_ecg
+from app.api.endpoints import internal_gateway, internal_ecg
 
 
 api_router = APIRouter()

@@ -12,17 +12,18 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from core.security import verify_internal_api_key
-from data.ecg_diagnosis_kb import build_kb_context_for_top5
-from services.chart_service import generate_ecg_top5_chart_png_bytes
-from services.ecg_service import get_ecg_predictor
-from services.llm_service import ECG_PROMPT_VERSION
+from app.core.security import verify_internal_api_key
+from app.data.ecg_diagnosis_kb import build_kb_context_for_top5
+from app.services.chart_service import generate_ecg_top5_chart_png_bytes
+from app.services.ecg_service import get_ecg_predictor
+from app.services.llm_service import ECG_PROMPT_VERSION
 
 router = APIRouter(
     prefix="/internal/ecg",
     tags=["Internal ECG"],
     dependencies=[Depends(verify_internal_api_key)],
 )
+
 
 _ecg_consultant_singleton: Any = None
 
