@@ -27,8 +27,8 @@ if not (os.getenv("INTERNAL_API_KEY") or "").strip():
 
 app = FastAPI(title="Heart Disease Prediction API (Internal)")
 
-# Trusted hosts: default localhost; override with AI_ALLOWED_HOSTS=host1,host2
-_allowed = os.getenv("AI_ALLOWED_HOSTS", "127.0.0.1,localhost,testserver").split(",")
+# Trusted hosts: default * (all hosts); override with AI_ALLOWED_HOSTS=host1,host2
+_allowed = os.getenv("AI_ALLOWED_HOSTS", "*").split(",")
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=[h.strip() for h in _allowed if h.strip()])
 
 
