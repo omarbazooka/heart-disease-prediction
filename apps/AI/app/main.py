@@ -1,7 +1,13 @@
 import os
+import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+# Ensure the 'app' directory is in sys.path to resolve 'api', 'services', 'db', etc.
+_app_dir = str(Path(__file__).resolve().parent)
+if _app_dir not in sys.path:
+    sys.path.insert(0, _app_dir)
 
 # Must run before any project import that reads os.environ (e.g. db.database -> core.config).
 _env_path = Path(__file__).resolve().parent.parent / ".env"
