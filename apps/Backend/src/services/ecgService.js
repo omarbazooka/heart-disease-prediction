@@ -71,6 +71,7 @@ class EcgService {
       data: {
         lab_id: lab.id,
         national_id: nid,
+        user_id: patient.id,
         inference_status: "pending",
         uploaded_by: "lab_portal",
         client_request_id: client_request_id ? String(client_request_id).slice(0, 200) : null,
@@ -79,17 +80,71 @@ class EcgService {
 
     try {
       const saved = await saveWfdbPair(row.id, datFile.buffer, heaFile.buffer);
+
+      // Run ECG AI pipeline immediately in memory using uploaded buffers
+      let aiResult = null;
+      let aiError = null;
+      let inferenceStatus = "pending";
+      try {
+        aiResult = await internalEcgPipeline({
+          ecgTestId: row.id,
+          datBuffer: datFile.buffer,
+          heaBuffer: heaFile.buffer,
+        });
+        inferenceStatus = "ok";
+      } catch (err) {
+        console.error("Immediate ECG inference failed on upload:", err);
+        aiError = String(err.message || err).slice(0, 2000);
+        inferenceStatus = "failed";
+      }
+
+      let updateData = {
+        dat_file_path: saved.relativeDat,
+        hea_file_path: saved.relativeHea,
+        original_dat_name: datFile.originalname || null,
+        original_hea_name: heaFile.originalname || null,
+        file_size_bytes: saved.file_size_bytes,
+        checksum_dat: saved.checksum_dat,
+        checksum_hea: saved.checksum_hea,
+      };
+
+      if (inferenceStatus === "ok" && aiResult) {
+        const primary = Array.isArray(aiResult.top_5) && aiResult.top_5[0] ? aiResult.top_5[0] : null;
+        const primaryLabel = primary?.label ?? null;
+        const primaryProb = primary != null ? Number(primary.probability) : null;
+        const detailedPayload = {
+          type: "ecg_inference",
+          top_5: aiResult.top_5,
+          primary_code: primary?.code ?? null,
+          primary_label: primaryLabel,
+        };
+
+        updateData = {
+          ...updateData,
+          primary_diagnosis: primaryLabel,
+          primary_probability: primaryProb,
+          detailed_results_json: detailedPayload,
+          llm_ecg_json: aiResult.llm_ecg_json ?? null,
+          model_name: aiResult.model_name ?? null,
+          model_version: aiResult.model_version ?? null,
+          llm_model: aiResult.llm_model ?? null,
+          llm_prompt_version: aiResult.llm_prompt_version ?? null,
+          inference_status: "ok",
+          inference_error: null,
+          inferred_at: new Date(),
+          prediction_completed_at: new Date(),
+        };
+      } else {
+        updateData = {
+          ...updateData,
+          inference_status: inferenceStatus,
+          inference_error: aiError,
+        };
+      }
+
       const updated = await prisma.ecgTest.update({
         where: { id: row.id },
-        data: {
-          dat_file_path: saved.relativeDat,
-          hea_file_path: saved.relativeHea,
-          original_dat_name: datFile.originalname || null,
-          original_hea_name: heaFile.originalname || null,
-          file_size_bytes: saved.file_size_bytes,
-          checksum_dat: saved.checksum_dat,
-          checksum_hea: saved.checksum_hea,
-        },
+        data: updateData,
         include: { lab: { select: { id: true, name: true, lab_code: true, address: true } } },
       });
       return shapeEcgPublic(updated);
