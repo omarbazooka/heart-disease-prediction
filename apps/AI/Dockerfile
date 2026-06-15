@@ -35,7 +35,7 @@ ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib
 COPY . .
 
 # Install Playwright Chromium and its system dependencies
-RUN playwright install --with-deps chromium
+RUN apt-get update && playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
 
 # Run the FastAPI app with Uvicorn, dynamically binding to the port specified by Railway
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
