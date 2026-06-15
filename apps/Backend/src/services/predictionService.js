@@ -109,7 +109,20 @@ class PredictionService {
       err.statusCode = 400;
       throw err;
     }
-    return internalShapPng(prediction.lab_test_id);
+
+    // ── Try database first ────────────────────────────────────────────
+    if (prediction.shap_image) {
+      return Buffer.from(prediction.shap_image);
+    }
+
+    // ── Fallback: AI service ──────────────────────────────────────────
+    try {
+      return await internalShapPng(prediction.lab_test_id);
+    } catch (aiErr) {
+      const err = new Error("SHAP image is not available yet. Please run Start Prediction again.");
+      err.statusCode = 503;
+      throw err;
+    }
   }
 
   static async reportPdfForPrediction(predictionId, user) {
@@ -119,7 +132,22 @@ class PredictionService {
       err.statusCode = 400;
       throw err;
     }
-    return internalReportPdf(prediction.lab_test_id);
+
+    // ── Try database first (pdf_binary stored during prediction) ──────
+    if (prediction.pdf_binary) {
+      return Buffer.from(prediction.pdf_binary);
+    }
+
+    // ── Fallback: ask AI service to generate it (only works when AI is reachable) ──
+    try {
+      return await internalReportPdf(prediction.lab_test_id);
+    } catch (aiErr) {
+      const err = new Error(
+        "PDF report is not available yet. Please run Start Prediction again to regenerate it."
+      );
+      err.statusCode = 503;
+      throw err;
+    }
   }
 }
 
