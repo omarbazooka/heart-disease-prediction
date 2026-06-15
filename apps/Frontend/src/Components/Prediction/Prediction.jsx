@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import API_BASE_URL from "../../config";
-
 
 import "./Prediction.css";
 
@@ -90,7 +88,7 @@ const Prediction = () => {
   const fetchLabs = async () => {
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/api/labs`
+        "http://localhost:5000/api/labs"
       );
 
       console.log("LABS => ", res.data);
@@ -327,8 +325,8 @@ const Prediction = () => {
             {result
               ? result.decision_label
               : hasLabTests
-              ? "Ready To Start Prediction"
-              : "Please Visit A Trusted Lab First"}
+                ? "Ready To Start Prediction"
+                : "Please Visit A Trusted Lab First"}
           </span>
 
         </div>
@@ -367,40 +365,40 @@ const Prediction = () => {
 
             {/* ================= DYNAMIC LABS ================= */}
             <div className="labs-wrapper">
-  {labs.map((lab) => (
-    
-    <a
-  key={lab.id}
-  href={labLinks[lab.name]}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="lab-card"
->
-     
-       <img
-    src={labImages[lab.name]}
-    alt={lab.name}
-    className="lab-image"
-  />
+              {labs.map((lab) => (
+
+                <a
+                  key={lab.id}
+                  href={labLinks[lab.name]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="lab-card"
+                >
+
+                  <img
+                    src={labImages[lab.name]}
+                    alt={lab.name}
+                    className="lab-image"
+                  />
 
 
-       <div className="lab-details">
-    <div className="lab-header">
-      <h4>{lab.name}</h4>
+                  <div className="lab-details">
+                    <div className="lab-header">
+                      <h4>{lab.name}</h4>
 
-      <span className="lab-rating">
-        ⭐ {lab.rating}
-      </span>
-    </div>
+                      <span className="lab-rating">
+                        ⭐ {lab.rating}
+                      </span>
+                    </div>
 
-      <p className="lab-address">
-      <BsGeoAltFill />
-      {lab.address}
-    </p>
-      </div>
-    </a>
-  ))}
-</div>
+                    <p className="lab-address">
+                      <BsGeoAltFill />
+                      {lab.address}
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
 
           </div>
         )}
