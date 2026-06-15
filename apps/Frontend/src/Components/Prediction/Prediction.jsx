@@ -49,7 +49,9 @@ const Prediction = () => {
   const [loading, setLoading] = useState(false);
   const [labs, setLabs] = useState([]);
   const [hasLabTests, setHasLabTests] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [latestLabTest, setLatestLabTest] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [userLocation, setUserLocation] = useState(null);
 
   const navigate = useNavigate();
@@ -83,6 +85,7 @@ const Prediction = () => {
         console.log(error);
       }
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ================= FETCH LABS =================
