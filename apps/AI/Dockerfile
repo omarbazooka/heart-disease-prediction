@@ -1,3 +1,4 @@
+# Trigger build
 FROM python:3.11-slim
 
 # Install system dependencies for WeasyPrint, fonts, and general build tools
