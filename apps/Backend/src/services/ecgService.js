@@ -125,7 +125,10 @@ class EcgService {
 
   static async getMyStatus(user) {
     const latest = await prisma.ecgTest.findFirst({
-      where: { national_id: user.national_id },
+      where: {
+        national_id: user.national_id,
+        inference_status: { not: "failed" },
+      },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
