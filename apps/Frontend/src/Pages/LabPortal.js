@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config";
+
 import { useNavigate } from "react-router-dom";
 import "./LabPortal.css";
 import { FaUpload, FaFileCsv, FaTimes } from "react-icons/fa";
-import API_BASE_URL from "../config";
 
 const LabPortal = () => {
   const [lab, setLab] = useState(null);
