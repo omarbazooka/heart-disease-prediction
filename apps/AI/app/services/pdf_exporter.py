@@ -48,7 +48,7 @@ def html_to_pdf(html: str) -> bytes:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
             page = browser.new_page()
-            page.set_content(html, wait_until="domcontentloaded", timeout=timeout_ms)
+            page.set_content(html, wait_until="networkidle", timeout=timeout_ms)
             pdf_bytes = page.pdf(
                 format="A4",
                 margin={"top": "20px", "right": "20px", "bottom": "20px", "left": "20px"},
