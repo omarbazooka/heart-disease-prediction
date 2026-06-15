@@ -1,20 +1,19 @@
 [phases.setup]
-# System packages needed for WeasyPrint (Cairo, Pango, GDK-PixBuf) and Chromium
-nixPkgs = [
-  "python311",
-  "cairo",
-  "pango",
-  "gdk-pixbuf",
-  "libffi",
-  "zlib",
-  "fontconfig",
-  "freetype",
+# Debian/Ubuntu apt packages for WeasyPrint (needs Cairo at runtime)
+# and Playwright Chromium dependencies
+aptPkgs = [
+  "libcairo2",
+  "libpango-1.0-0",
+  "libpangocairo-1.0-0",
+  "libgdk-pixbuf2.0-0",
+  "libffi-dev",
+  "shared-mime-info",
+  "fonts-liberation",
 ]
 
 [phases.install]
 cmds = [
   "pip install -r requirements.txt",
-  # Install Chromium for Playwright (headless PDF fallback)
   "playwright install chromium --with-deps || true",
 ]
 

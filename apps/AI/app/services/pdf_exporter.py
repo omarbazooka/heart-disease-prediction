@@ -4,10 +4,9 @@ report/pdf_exporter.py
 PDF Conversion Layer — converts rendered HTML string to PDF bytes.
 
 Strategy (in order):
-  1. WeasyPrint  — best quality on Linux (no binaries needed on Linux)
-  2. xhtml2pdf   — pure Python, works everywhere (pip install xhtml2pdf)
-  3. Playwright  — Chromium headless (run: playwright install chromium)
-  4. pdfkit      — needs wkhtmltopdf binary installed
+  1. WeasyPrint  — best on Linux (needs libcairo2 at runtime; installed via apt)
+  2. Playwright  — Chromium headless (playwright install chromium in build step)
+  3. pdfkit      — needs wkhtmltopdf binary installed
 
 Single responsibility: HTML string → PDF bytes.
 """
@@ -21,15 +20,14 @@ def html_to_pdf(html: str) -> bytes:
     Convert a rendered HTML string to a PDF byte stream.
 
     Tries backends in order:
-      1. WeasyPrint (best on Linux)
-      2. xhtml2pdf (pure Python fallback)
-      3. Playwright (Chromium headless)
-      4. pdfkit (last resort)
+      1. WeasyPrint (Linux: libcairo2 via apt in nixpacks.toml)
+      2. Playwright (Chromium headless — playwright install chromium)
+      3. pdfkit (last resort — needs wkhtmltopdf binary)
 
     Parameters
     ----------
     html : str
-        Fully rendered HTML string from renderer.render_report().
+        Fully rendered HTML string.
 
     Returns
     -------
@@ -41,7 +39,7 @@ def html_to_pdf(html: str) -> bytes:
     """
     errors = {}
 
-    # ── 1. WeasyPrint (best on Linux — no binary downloads needed) ────
+    # ── 1. WeasyPrint (best on Linux — libcairo2 provided via apt) ────
     try:
         from weasyprint import HTML
         return HTML(string=html).write_pdf()
@@ -49,39 +47,7 @@ def html_to_pdf(html: str) -> bytes:
         errors["weasyprint"] = str(e)
         print(f"[pdf_exporter] WeasyPrint unavailable: {e}")
 
-    # ── 2. xhtml2pdf (pure Python — works on Linux without binaries) ──
-    try:
-        from xhtml2pdf import pisa
-        from pathlib import Path as _Path
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
-
-        # Register Amiri Arabic font if available
-        _font_dir = _Path(__file__).resolve().parent.parent.parent / "assets" / "fonts"
-        _regular = _font_dir / "Amiri-Regular.ttf"
-        _bold    = _font_dir / "Amiri-Bold.ttf"
-        if _regular.exists():
-            pdfmetrics.registerFont(TTFont("Amiri", str(_regular)))
-        if _bold.exists():
-            pdfmetrics.registerFont(TTFont("Amiri-Bold", str(_bold)))
-
-        buf = io.BytesIO()
-        result = pisa.CreatePDF(
-            src=html.encode("utf-8"),
-            dest=buf,
-            encoding="utf-8",
-        )
-        if not result.err:
-            buf.seek(0)
-            return buf.read()
-        else:
-            errors["xhtml2pdf"] = f"pisa reported errors: {result.err}"
-            print(f"[pdf_exporter] xhtml2pdf errors: {result.err}")
-    except Exception as e:
-        errors["xhtml2pdf"] = str(e)
-        print(f"[pdf_exporter] xhtml2pdf failed: {e}")
-
-    # ── 3. Playwright (Chromium headless — run: playwright install chromium) ─
+    # ── 2. Playwright (Chromium headless) ─────────────────────────────
     try:
         from playwright.sync_api import sync_playwright
 
@@ -100,16 +66,16 @@ def html_to_pdf(html: str) -> bytes:
         errors["playwright"] = str(e)
         print(f"[pdf_exporter] Playwright unavailable: {e}")
 
-    # ── 4. pdfkit (needs wkhtmltopdf binary) ──────────────────────────
+    # ── 3. pdfkit (needs wkhtmltopdf binary) ──────────────────────────
     try:
         import pdfkit
         options = {
-            "page-size":    "A4",
-            "encoding":     "UTF-8",
-            "margin-top":   "15mm",
-            "margin-right": "15mm",
-            "margin-bottom":"15mm",
-            "margin-left":  "15mm",
+            "page-size":     "A4",
+            "encoding":      "UTF-8",
+            "margin-top":    "15mm",
+            "margin-right":  "15mm",
+            "margin-bottom": "15mm",
+            "margin-left":   "15mm",
         }
         return pdfkit.from_string(html, False, options=options)
     except Exception as e:
@@ -120,8 +86,7 @@ def html_to_pdf(html: str) -> bytes:
         "All PDF backends failed.\n" +
         "\n".join(f"  {k}: {v}" for k, v in errors.items()) +
         "\n\nInstall one of:\n"
-        "  WeasyPrint : pip install weasyprint  (Linux: works natively)\n"
-        "  xhtml2pdf  : pip install xhtml2pdf reportlab  (pure Python)\n"
+        "  WeasyPrint : pip install weasyprint  (Linux: needs libcairo2 via apt)\n"
         "  Playwright : pip install playwright && playwright install chromium\n"
         "  pdfkit     : pip install pdfkit + wkhtmltopdf binary"
     )

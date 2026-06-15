@@ -34,8 +34,6 @@ requests
 
 # ── Report Generation (HTML → PDF pipeline) ────────────────────────────────
 jinja2                # HTML templating
-xhtml2pdf             # Pure Python HTML→PDF — works on Linux without binaries ✅
-reportlab             # Required by xhtml2pdf
-weasyprint            # High-quality HTML→PDF (Linux: works natively; Windows: needs GTK)
-playwright>=1.40      # Chromium headless PDF (run: playwright install chromium after pip install)
+weasyprint            # HTML→PDF via Cairo (runtime: libcairo2 installed via apt in nixpacks.toml)
+playwright>=1.40      # Chromium headless PDF fallback (playwright install chromium in build step)
 pdfkit                # Last-resort fallback (requires wkhtmltopdf binary)
