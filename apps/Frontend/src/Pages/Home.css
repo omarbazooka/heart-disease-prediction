@@ -50,6 +50,7 @@
       #1198B7 100%);
 
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -66,6 +67,7 @@
       rgba(17, 152, 183, 0.7));
 
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 
   max-width: 550px;
