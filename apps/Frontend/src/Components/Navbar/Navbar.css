@@ -67,4 +67,223 @@ nav li {
   background-color: #1198b7 !important;
   color: #fff !important;
   box-shadow: 0 6px 15px rgba(17, 152, 183, 0.25);
-} /* hero section */
+}
+
+/* ================= DARK MODE ================= */
+body.dark-mode {
+  background: #0d1e24 !important;
+  color: #e0eef3 !important;
+  --bg-main: #0d1e24;
+  --text-title: #e0eef3;
+  --text-body: #a0c0cb;
+  --border-light: #1b353e;
+  
+  --pd-bg: #0d1e24;
+  --pd-card: #13272e;
+  --pd-text: #e0eef3;
+  --pd-muted: #a0c0cb;
+  --pd-border: #1b353e;
+  --pd-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* General / Home Page Dark Mode */
+body.dark-mode .page {
+  background: #0d1e24 !important;
+}
+body.dark-mode .feature-card {
+  background: #13272e !important;
+  border-color: #1b353e !important;
+  box-shadow: -12px 5px 15px rgba(0, 0, 0, 0.5) !important;
+}
+body.dark-mode .cap_Card {
+  color: #a0c0cb !important;
+}
+
+/* Navbar Dark Mode */
+body.dark-mode .navbar {
+  background-color: #13272e !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+}
+body.dark-mode .nav-link {
+  color: #e0eef3 !important;
+}
+body.dark-mode .brand {
+  color: #1198b7 !important;
+}
+body.dark-mode .btn-dark-mode {
+  color: #facc15 !important; /* bright sun yellow when in dark mode */
+}
+body.dark-mode .navbar-toggler {
+  border-color: #1b353e !important;
+  background-color: #1c353f !important;
+}
+body.dark-mode .navbar-toggler-icon {
+  filter: invert(1);
+}
+body.dark-mode .navbar-nav {
+  background-color: #13272e !important;
+  border-color: #1b353e !important;
+}
+
+/* Patient Dashboard Dark Mode */
+body.dark-mode .pd-card {
+  background: var(--pd-card) !important;
+  border-color: var(--pd-border) !important;
+}
+body.dark-mode .pd-card-header {
+  background: linear-gradient(180deg, #172f38 0%, #13272e 100%) !important;
+  border-bottom-color: var(--pd-border) !important;
+}
+body.dark-mode .pd-stat-card {
+  background: var(--pd-card) !important;
+  border-color: var(--pd-border) !important;
+}
+body.dark-mode .pd-table th {
+  background: #172f38 !important;
+  color: #a0c0cb !important;
+  border-bottom-color: var(--pd-border) !important;
+}
+body.dark-mode .pd-table td {
+  color: #e0eef3 !important;
+  border-bottom-color: #1b353e !important;
+}
+body.dark-mode .pd-table tbody tr:hover {
+  background: rgba(17, 152, 183, 0.08) !important;
+}
+body.dark-mode .pd-insight-list li {
+  background: #13272e !important;
+  border-color: #1b353e !important;
+}
+body.dark-mode .pd-modal {
+  background: #13272e !important;
+  color: #e0eef3 !important;
+}
+body.dark-mode .pd-modal-header {
+  border-bottom-color: var(--pd-border) !important;
+}
+body.dark-mode .pd-modal-close {
+  background: #1c353f !important;
+  color: #e0eef3 !important;
+}
+body.dark-mode input, body.dark-mode select {
+  background: #0d1e24 !important;
+  color: #e0eef3 !important;
+  border-color: #1b353e !important;
+}
+body.dark-mode input:focus, body.dark-mode select:focus {
+  border-color: #1198b7 !important;
+}
+body.dark-mode input:disabled {
+  background: #112128 !important;
+  color: #5f7d8a !important;
+}
+body.dark-mode .pd-btn-ghost {
+  background: #1c353f !important;
+  color: #e0eef3 !important;
+}
+body.dark-mode .pd-btn-ghost:hover {
+  background: #254450 !important;
+}
+body.dark-mode .pd-pagination button {
+  background: #13272e !important;
+  color: #e0eef3 !important;
+  border-color: #1b353e !important;
+}
+body.dark-mode .pd-pagination button:disabled {
+  background: #0d1e24 !important;
+}
+body.dark-mode .pd-back {
+  background: #13272e !important;
+  border-color: #1b353e !important;
+}
+
+/* Prediction pages dark mode overrides */
+body.dark-mode .prediction-card {
+  background: #13272e !important;
+  border-color: #1b353e !important;
+  color: #e0eef3 !important;
+}
+body.dark-mode .prediction-card h1,
+body.dark-mode .prediction-card h2,
+body.dark-mode .prediction-card h3 {
+  color: #e0eef3 !important;
+}
+body.dark-mode .report-box {
+  background: #1c353f !important;
+  border-color: #1b353e !important;
+}
+body.dark-mode .result-card {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
+}
+body.dark-mode .tip-card {
+  background: linear-gradient(180deg, #13272e 0%, #1c353f 100%) !important;
+  color: #e0eef3 !important;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.3) !important;
+}
+body.dark-mode .tips-title {
+  background: linear-gradient(90deg, #e0eef3, #1198b7) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+body.dark-mode .city-title {
+  color: #e0eef3 !important;
+}
+body.dark-mode .hospital-card {
+  background: linear-gradient(180deg, #13272e 0%, #1c353f 100%) !important;
+  border-color: #1b353e !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3) !important;
+}
+body.dark-mode .hospital-name {
+  background: linear-gradient(to right, #e0eef3, #1198b7) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+body.dark-mode .location {
+  color: #a0c0cb !important;
+  border-bottom-color: #1b353e !important;
+}
+body.dark-mode .medical-report-title,
+body.dark-mode .cap-effect {
+  background: linear-gradient(90deg, #e0eef3, #1198b7) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+body.dark-mode .lab-portal-card {
+  background: #13272e !important;
+  border-color: #1b353e !important;
+}
+body.dark-mode .lab-portal-header h2 {
+  color: #e0eef3 !important;
+}
+body.dark-mode .upload-area {
+  background: #0d1e24 !important;
+  border-color: #1198b7 !important;
+}
+body.dark-mode .upload-label {
+  color: #e0eef3 !important;
+}
+body.dark-mode .selected-files h4 {
+  color: #e0eef3 !important;
+}
+body.dark-mode .selected-files li {
+  background: #0d1e24 !important;
+  border-color: #1b353e !important;
+}
+body.dark-mode .file-name {
+  color: #e0eef3 !important;
+}
+body.dark-mode .result-box h4 {
+  color: #e0eef3 !important;
+}
+body.dark-mode .result-box.success {
+  background: #112d20 !important;
+  border-color: #22c55e !important;
+}
+body.dark-mode .result-box.error {
+  background: #2d1313 !important;
+  border-color: #ef4444 !important;
+}
+
