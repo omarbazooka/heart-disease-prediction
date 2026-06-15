@@ -253,7 +253,7 @@ const Login = () => {
         >
           <div className="logo-title-wrapper">
             <img src={logo} className="logo" alt="logo" />
-            <h1>Heart Diseases</h1>
+            <h1>Nabdak</h1>
           </div>
         </div>
       </div>

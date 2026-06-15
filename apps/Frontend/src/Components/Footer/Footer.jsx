@@ -12,7 +12,7 @@ export default function Footer() {
           <div className="col-md-3 mb-3">
             <div className="d-flex align-items-center gap-2 mb-2">
               <img src={logo} className="logo" alt="logo" />
-              <span className="brand">Heart Diseases</span>
+              <span className="brand">Nabdak</span>
             </div>
 
             <p className="footer-text">
@@ -72,7 +72,7 @@ export default function Footer() {
         <hr className="footer-line" />
 
         <p className="text-center copyright">
-          © 2026 Heart Diseases. All Rights Reserved.
+          © 2026 Nabdak. All Rights Reserved.
         </p>
       </div>
     </footer>
