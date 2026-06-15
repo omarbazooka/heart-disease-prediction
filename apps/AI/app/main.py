@@ -1,26 +1,17 @@
 import os
-import sys
 from pathlib import Path
-
-# Add the 'app' directory and its parent 'AI' directory to sys.path to resolve all import styles
-_current_dir = Path(__file__).resolve().parent
-if str(_current_dir) not in sys.path:
-    sys.path.append(str(_current_dir))
-_parent_dir = _current_dir.parent
-if str(_parent_dir) not in sys.path:
-    sys.path.append(str(_parent_dir))
 
 from dotenv import load_dotenv
 
 # Must run before any project import that reads os.environ (e.g. db.database -> core.config).
-_env_path = _current_dir.parent / ".env"
+_env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(_env_path, encoding="utf-8-sig")
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
-from app.api.router import api_router
+from api.router import api_router
 
 if not (os.getenv("INTERNAL_API_KEY") or "").strip():
     print(
