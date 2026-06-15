@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API_BASE_URL from "../../config";
 
 import "./Prediction.css";
 
@@ -88,7 +89,7 @@ const Prediction = () => {
   const fetchLabs = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/labs"
+        `${API_BASE_URL}/api/labs`
       );
 
       console.log("LABS => ", res.data);
