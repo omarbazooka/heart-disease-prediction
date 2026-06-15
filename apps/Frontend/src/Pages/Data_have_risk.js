@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config";
+
 
 import "../Pages/Data_have_risk.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import API_BASE_URL from "../config";
 
 import { useNavigate } from "react-router-dom";
 
