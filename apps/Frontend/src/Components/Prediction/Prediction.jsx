@@ -116,11 +116,7 @@ const Prediction = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
 
-<<<<<<< HEAD
-        `${API_BASE_URL}/api/labtests/me/status`,
-=======
         navigate("/login");
->>>>>>> Samar_frontend
 
         return null;
       }
@@ -193,72 +189,6 @@ const Prediction = () => {
           alert(
             "No lab test found. Please visit a trusted medical lab first."
           );
-<<<<<<< HEAD
-
-          setLoading(false);
-
-          return;
-        }
-
-        // ================= START PREDICTION =================
-        const res = await axios.post(
-
-          `${API_BASE_URL}/api/predictions/start`,
-
-          {},
-
-          {
-            headers: {
-              Authorization:
-                `Bearer ${token}`,
-            },
-          }
-
-        );
-
-        console.log(
-          "FULL RESPONSE => ",
-          res.data
-        );
-
-        const predictionData =
-          res.data.data;
-
-        console.log(
-          "PREDICTION DATA => ",
-          predictionData
-        );
-
-        // ================= SAVE =================
-        localStorage.setItem(
-          "prediction",
-          JSON.stringify(
-            predictionData
-          )
-        );
-
-        localStorage.setItem(
-          "prediction_id",
-          predictionData.prediction_id
-        );
-
-        setResult(
-          predictionData
-        );
-
-        // ================= NAVIGATE =================
-        if (
-          predictionData.probability < 70
-        ) {
-
-
-          navigate(
-            "/have_no_risk"
-          );
-
-
-=======
->>>>>>> Samar_frontend
         } else {
           alert(
             response?.message ||
