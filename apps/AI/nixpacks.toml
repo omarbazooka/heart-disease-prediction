@@ -1,8 +1,9 @@
 [phases.setup]
-# Debian/Ubuntu apt packages for WeasyPrint (needs Cairo at runtime)
-# and Playwright Chromium dependencies
+# Debian/Ubuntu apt packages for WeasyPrint
+# libglib2.0-0 provides libgobject-2.0-0 (REQUIRED by WeasyPrint)
 aptPkgs = [
   "libcairo2",
+  "libglib2.0-0",
   "libpango-1.0-0",
   "libpangocairo-1.0-0",
   "libgdk-pixbuf2.0-0",
