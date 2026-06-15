@@ -59,7 +59,7 @@ function Home() {
 
     // ================= REDIRECT IF LOW RISK =================
     if (
-      parsedPrediction?.probability < 70
+      parsedPrediction?.probability < 50
     ) {
 
       navigate("/have_no_risk");
@@ -219,7 +219,7 @@ function Home() {
 
         <p className="result-note">
 
-          If the percentage is higher than 70%
+          If the percentage is higher than 50%
           it means you have heart disease
 
         </p>
