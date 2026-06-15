@@ -4,11 +4,9 @@ report/pdf_exporter.py
 PDF Conversion Layer — converts rendered HTML string to PDF bytes.
 
 Strategy (in order):
-  1. Playwright + Chromium — prebuilt wheels on Windows (no MSVC). After
-     `pip install playwright`, run once: `playwright install chromium`
-  2. WeasyPrint  — best quality (needs GTK3 on Windows)
-  3. xhtml2pdf   — often fails to install on Python 3.13+Windows (python-bidi
-     builds from Rust and needs Visual Studio Build Tools / link.exe)
+  1. WeasyPrint  — best quality on Linux (no binaries needed on Linux)
+  2. xhtml2pdf   — pure Python, works everywhere (pip install xhtml2pdf)
+  3. Playwright  — Chromium headless (run: playwright install chromium)
   4. pdfkit      — needs wkhtmltopdf binary installed
 
 Single responsibility: HTML string → PDF bytes.
@@ -23,10 +21,10 @@ def html_to_pdf(html: str) -> bytes:
     Convert a rendered HTML string to a PDF byte stream.
 
     Tries backends in order:
-      1. Playwright (Chromium headless)
-      2. WeasyPrint
-      3. xhtml2pdf (pisa)
-      4. pdfkit
+      1. WeasyPrint (best on Linux)
+      2. xhtml2pdf (pure Python fallback)
+      3. Playwright (Chromium headless)
+      4. pdfkit (last resort)
 
     Parameters
     ----------
@@ -43,26 +41,7 @@ def html_to_pdf(html: str) -> bytes:
     """
     errors = {}
 
-    # ── 1. Playwright (recommended on Windows — avoids python-bidi / Rust build) ─
-    try:
-        from playwright.sync_api import sync_playwright
-
-        timeout_ms = int(os.getenv("PDF_PLAYWRIGHT_TIMEOUT_MS", "120000"))
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.set_content(html, wait_until="domcontentloaded", timeout=timeout_ms)
-            pdf_bytes = page.pdf(
-                format="A4",
-                margin={"top": "20px", "right": "20px", "bottom": "20px", "left": "20px"},
-            )
-            browser.close()
-        return pdf_bytes
-    except Exception as e:
-        errors["playwright"] = str(e)
-        print(f"[pdf_exporter] Playwright unavailable: {e}")
-
-    # ── 2. WeasyPrint ─────────────────────────────────────────────────
+    # ── 1. WeasyPrint (best on Linux — no binary downloads needed) ────
     try:
         from weasyprint import HTML
         return HTML(string=html).write_pdf()
@@ -70,7 +49,7 @@ def html_to_pdf(html: str) -> bytes:
         errors["weasyprint"] = str(e)
         print(f"[pdf_exporter] WeasyPrint unavailable: {e}")
 
-    # ── 3. xhtml2pdf (may not install on Py3.13 + Windows without MSVC) ─
+    # ── 2. xhtml2pdf (pure Python — works on Linux without binaries) ──
     try:
         from xhtml2pdf import pisa
         from pathlib import Path as _Path
@@ -102,6 +81,24 @@ def html_to_pdf(html: str) -> bytes:
         errors["xhtml2pdf"] = str(e)
         print(f"[pdf_exporter] xhtml2pdf failed: {e}")
 
+    # ── 3. Playwright (Chromium headless — run: playwright install chromium) ─
+    try:
+        from playwright.sync_api import sync_playwright
+
+        timeout_ms = int(os.getenv("PDF_PLAYWRIGHT_TIMEOUT_MS", "120000"))
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.set_content(html, wait_until="domcontentloaded", timeout=timeout_ms)
+            pdf_bytes = page.pdf(
+                format="A4",
+                margin={"top": "20px", "right": "20px", "bottom": "20px", "left": "20px"},
+            )
+            browser.close()
+        return pdf_bytes
+    except Exception as e:
+        errors["playwright"] = str(e)
+        print(f"[pdf_exporter] Playwright unavailable: {e}")
 
     # ── 4. pdfkit (needs wkhtmltopdf binary) ──────────────────────────
     try:
@@ -122,11 +119,9 @@ def html_to_pdf(html: str) -> bytes:
     raise RuntimeError(
         "All PDF backends failed.\n" +
         "\n".join(f"  {k}: {v}" for k, v in errors.items()) +
-        "\n\nRecommended on Windows (especially Python 3.13):\n"
-        "  pip install playwright\n"
-        "  playwright install chromium\n"
-        "\nAlternatives:\n"
-        "  - xhtml2pdf : often needs Visual Studio C++ Build Tools on Py 3.13\n"
-        "  - WeasyPrint: pip install weasyprint + GTK runtime (Windows)\n"
-        "  - pdfkit    : pip install pdfkit + wkhtmltopdf binary"
+        "\n\nInstall one of:\n"
+        "  WeasyPrint : pip install weasyprint  (Linux: works natively)\n"
+        "  xhtml2pdf  : pip install xhtml2pdf reportlab  (pure Python)\n"
+        "  Playwright : pip install playwright && playwright install chromium\n"
+        "  pdfkit     : pip install pdfkit + wkhtmltopdf binary"
     )
