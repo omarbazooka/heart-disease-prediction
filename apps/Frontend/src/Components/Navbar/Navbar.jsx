@@ -119,7 +119,7 @@ export default function Navbar() {
             <>
               <button
                 onClick={() => navigate("/profile")}
-                className="custom-btn rounded-pill px-2 d-flex align-items-center gap-2"
+                className="custom-btn rounded-pill px-4 py-2 d-flex align-items-center gap-2"
               >
                 My Dashboard
                 <img src={profile} className="profile" alt="profile" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
