@@ -121,7 +121,7 @@ const LabPortal = () => {
       const res = await axios.post(`${API_BASE_URL}/api/lab-portal/upload-csvs`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          "x-lab-key": "admin-key-change-me",
+          "x-lab-key": process.env.REACT_APP_LAB_API_KEY || "admin-key-change-me",
           "x-lab-id": lab.id,
         },
       });
@@ -165,7 +165,7 @@ const LabPortal = () => {
       const res = await axios.post(`${API_BASE_URL}/api/lab-portal/ecg`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          "x-lab-key": "admin-key-change-me",
+          "x-lab-key": process.env.REACT_APP_LAB_API_KEY || "admin-key-change-me",
           "x-lab-id": lab.id,
         },
       });
