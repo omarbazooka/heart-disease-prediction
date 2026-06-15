@@ -1,10 +1,48 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import API_BASE_URL from "../../config";
+
+
 import "./Prediction.css";
+
 import { Link, useNavigate } from "react-router-dom";
 import { BsGeoAltFill } from "react-icons/bs";
 import { getLatestLabTest, startPrediction } from "../../services/api";
-import API_BASE_URL from "../../config";
+import mokhtabarImg from "../../assets/mokhtabar.png";
+import borgImg from "../../assets/borg.png";
+import hassabImg from "../../assets/hassab.png";
+import royalImg from "../../assets/royal.png";
+import shamsImg from "../../assets/shams.png";
+import nileImg from "../../assets/nile.png";
+
+const labImages = {
+  "Al Mokhtabar labs": mokhtabarImg,
+  "AL Borg Labs": borgImg,
+  "Hassab Labs": hassabImg,
+  "Royal Labs": royalImg,
+  "Al Shams Labs": shamsImg,
+  "Al Nile Labs": nileImg,
+};
+
+const labLinks = {
+  "Al Mokhtabar labs":
+    "https://almokhtabar.com/ar/%d8%a7%d9%84%d9%81%d8%b1%d9%88%d8%b9/",
+
+  "AL Borg Labs":
+    "https://alborglab.com/branches/",
+
+  "Hassab Labs":
+    "https://hassab.com/site/ar/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+
+  "Royal Labs":
+    "https://royal-lab.net/ar/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+
+  "Al Shams Labs":
+    "http://alshamslabs.com/branches.aspx",
+
+  "Al Nile Labs":
+    "https://nilescanandlabs.net/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+};
 
 const Prediction = () => {
   // ================= STATE =================
@@ -230,6 +268,7 @@ const Prediction = () => {
       </div>
     );
   }
+  console.log(borgImg);
 
   // ================= UI =================
   return (
@@ -297,69 +336,74 @@ const Prediction = () => {
         <p className="info-text">
           {hasLabTests
             ? "Your Lab Results Are Ready For Prediction"
-            : "You Should Go To Trusted Medical Labs So They Can Upload Your Results"}
+
+
+
+            : "You Should Go To Trusted Medical Labs So You Can Start Prediction"}
+
         </p>
 
-        <div className="labs-section">
+        {/* ================= LABS SECTION ================= */}
+        {!hasLabTests && (
+          <div className="labs-section">
 
-          <div className="labs-top">
+            <div className="labs-top">
 
-            <div>
-              <h3 className="labs-title">
-                Trusted Medical Labs
-              </h3>
+              <div>
 
-              <p className="labs-sub">
-                There Is Thousands Of Trusted Medical Labs
-              </p>
+                <h3 className="labs-title">
+                  Trusted Medical Labs
+                </h3>
+
+                <p className="labs-sub">
+
+                  There Is Thousands Of Trusted Medical Labs
+
+                </p>
+
+              </div>
+
             </div>
 
-          </div>
+            {/* ================= DYNAMIC LABS ================= */}
+            <div className="labs-wrapper">
+  {labs.map((lab) => (
+    
+    <a
+  key={lab.id}
+  href={labLinks[lab.name]}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="lab-card"
+>
+     
+       <img
+    src={labImages[lab.name]}
+    alt={lab.name}
+    className="lab-image"
+  />
 
-          <div className="labs-wrapper">
 
-            {labs.map((lab) => (
+       <div className="lab-details">
+    <div className="lab-header">
+      <h4>{lab.name}</h4>
 
-              <a
-                key={lab.id}
-                href={
-                  userLocation
-                    ? `https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(lab.address)}`
-                    : `https://www.google.com/maps/search/${encodeURIComponent(lab.address)}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lab-card"
-              >
+      <span className="lab-rating">
+        ⭐ {lab.rating}
+      </span>
+    </div>
 
-                <div className="lab-content">
-
-                  <div className="lab-title-row">
-
-                    <h4>{lab.name}</h4>
-
-                    <span className="rating-badge">
-                      Lab
-                    </span>
-
-                  </div>
-
-                  <div className="lab-info">
-                    <p>
-                      <BsGeoAltFill />
-                      {lab.address}
-                    </p>
-                  </div>
-
-                </div>
-
-              </a>
-
-            ))}
+      <p className="lab-address">
+      <BsGeoAltFill />
+      {lab.address}
+    </p>
+      </div>
+    </a>
+  ))}
+</div>
 
           </div>
-
-        </div>
+        )}
 
       </div>
     </div>
