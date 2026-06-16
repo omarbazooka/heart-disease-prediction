@@ -197,11 +197,21 @@ function InteractiveEcgChart({ data }) {
   const [hoveredBar, setHoveredBar] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [animate, setAnimate] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     // Trigger slide-in animation shortly after mount
     const timer = setTimeout(() => setAnimate(true), 100);
-    return () => clearTimeout(timer);
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (!data || data.length === 0) {
@@ -317,8 +327,15 @@ function InteractiveEcgChart({ data }) {
     const card = e.currentTarget.closest(".ecg-chart-card");
     if (!card) return;
     const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    
+    // Bounds check to prevent tooltip from overflowing the card boundary
+    const tooltipWidth = 260;
+    if (x + tooltipWidth + 30 > rect.width) {
+      x = x - tooltipWidth - 25;
+    }
+    
     setTooltipPos({ x, y });
     setHoveredBar(item);
   };
@@ -329,6 +346,63 @@ function InteractiveEcgChart({ data }) {
     const regex = new RegExp(`\\s*\\(${code}\\)\\s*$`, "i");
     return label.replace(regex, "").trim();
   };
+
+  if (isMobile) {
+    return (
+      <div className="ecg-mobile-container">
+        <div className="ecg-mobile-list">
+          {items.map((item, idx) => {
+            const prob = Number(item.probability) || 0;
+            const displayLabel = cleanLabel(item.label, item.code);
+            const isNormal = item.code === "NORM" || item.code === "SR";
+            
+            return (
+              <div key={idx} className="ecg-mobile-item-card">
+                <div className="ecg-mobile-header">
+                  <span className="ecg-mobile-label">{displayLabel}</span>
+                  <span className="ecg-mobile-code-badge">{item.code}</span>
+                </div>
+                
+                <div className="ecg-mobile-bar-wrapper">
+                  <div 
+                    className="ecg-mobile-bar" 
+                    style={{ 
+                      width: animate ? `${prob}%` : "0%",
+                      background: "linear-gradient(90deg, #0284c7, #0ea5e9)",
+                      transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
+                    }}
+                  />
+                </div>
+                
+                <div className="ecg-mobile-meta">
+                  <span className="ecg-mobile-probability">
+                    Confidence Probability: <strong>{prob.toFixed(2)}%</strong>
+                  </span>
+                  <span className={`ecg-mobile-status ${isNormal ? "normal" : "warning"}`}>
+                    {isNormal ? (
+                      <>
+                        <i className="fa-solid fa-circle-check" style={{ marginRight: "4px" }}></i>
+                        Normal Rhythm
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: "4px" }}></i>
+                        Anomalous (Follow up)
+                      </>
+                    )}
+                  </span>
+                </div>
+                
+                <div className="ecg-mobile-desc">
+                  {scpDescriptions[item.code] || "Automated diagnosis pattern detected from ECG waveforms."}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ecg-chart-card">

@@ -399,11 +399,21 @@ function InteractiveShapChart({ data }) {
   const [hoveredBar, setHoveredBar] = useState(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [animate, setAnimate] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     // Trigger slide-in animation shortly after mount
     const timer = setTimeout(() => setAnimate(true), 100);
-    return () => clearTimeout(timer);
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   if (!data || !data.top_features || data.top_features.length === 0) {
@@ -488,11 +498,79 @@ function InteractiveShapChart({ data }) {
     const card = e.currentTarget.closest(".shap-chart-card");
     if (!card) return;
     const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    
+    // Bounds check to prevent tooltip from overflowing the card boundary
+    const tooltipWidth = 260;
+    if (x + tooltipWidth + 30 > rect.width) {
+      x = x - tooltipWidth - 25;
+    }
+    
     setTooltipPos({ x, y });
     setHoveredBar(feature);
   };
+
+  if (isMobile) {
+    return (
+      <div className="shap-mobile-container">
+        <div className="shap-mobile-list">
+          {features.map((item, idx) => {
+            const absoluteImpact = Math.abs(item.impact);
+            const percent = Math.min(100, (absoluteImpact / maxVal) * 100);
+            const isIncrease = item.direction === "increase";
+            
+            return (
+              <div key={idx} className="shap-mobile-item-card">
+                <div className="shap-mobile-header">
+                  <span className="shap-mobile-feature">{item.feature}</span>
+                  <span className="shap-mobile-value">
+                    Value: <strong>{formatFeatureValue(item.feature, item.value)}</strong>
+                  </span>
+                </div>
+                
+                <div className="shap-mobile-bar-wrapper">
+                  <div 
+                    className="shap-mobile-bar" 
+                    style={{ 
+                      width: animate ? `${percent}%` : "0%",
+                      background: isIncrease 
+                        ? "linear-gradient(90deg, #ef4444, #dc2626)" 
+                        : "linear-gradient(90deg, #10b981, #059669)",
+                      transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
+                    }}
+                  />
+                </div>
+                
+                <div className="shap-mobile-meta">
+                  <span className="shap-mobile-score">
+                    Importance Score: <strong>{absoluteImpact.toFixed(4)}</strong>
+                  </span>
+                  <span className={`shap-mobile-direction ${item.direction}`}>
+                    {isIncrease ? (
+                      <>
+                        <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: "4px" }}></i>
+                        Increases Risk
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-circle-check" style={{ marginRight: "4px" }}></i>
+                        Decreases Risk
+                      </>
+                    )}
+                  </span>
+                </div>
+                
+                <div className="shap-mobile-desc">
+                  {featureDescriptions[item.feature] || "N/A"}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="shap-chart-card">
