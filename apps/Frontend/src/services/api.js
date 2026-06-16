@@ -95,6 +95,20 @@ export const getShapImage = async (predictionId) => {
   return res.blob(); // Return Blob for image display
 };
 
+// Get SHAP numeric data for interactive visualization
+export const getShapData = async (predictionId) => {
+  const res = await fetch(`${BASE_URL}/api/predictions/${predictionId}/shap/data`, {
+    headers: authHeaders(),
+  });
+  
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || "Failed to fetch SHAP data");
+  }
+  
+  return handleJsonResponse(res);
+};
+
 // Get PDF Report as Blob (للـ Download)
 export const getReportPDF = async (predictionId) => {
   const res = await fetch(`${BASE_URL}/api/predictions/${predictionId}/report`, {

@@ -17,6 +17,7 @@
   font-family: "Arial Narrow Bold", sans-serif;
   font-weight: bold;
   color: rgb(33, 68, 75);
+  font-size: 28px;
 }
 nav li {
   color: #0f3d4c;
@@ -99,7 +100,8 @@ body.dark-mode {
 }
 
 /* General / Home Page Dark Mode */
-body.dark-mode .page {
+body.dark-mode .page,
+body.dark-mode .app-container {
   background: #090d16 !important;
 }
 body.dark-mode .hero-title {
@@ -166,6 +168,26 @@ body.dark-mode .navbar-toggler-icon {
 body.dark-mode .navbar-nav {
   background-color: #131926 !important;
   border-color: #222f47 !important;
+}
+body.dark-mode .footer {
+  background-color: #131926 !important;
+  border: 1px solid #222f47 !important;
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.45) !important;
+}
+body.dark-mode .footer-title,
+body.dark-mode .footer-text,
+body.dark-mode .footer-list li,
+body.dark-mode .copyright {
+  color: #cbd5e1 !important;
+}
+body.dark-mode .footer-list li:hover {
+  color: #38bdf8 !important;
+}
+body.dark-mode .social-icons a {
+  color: #cbd5e1 !important;
+}
+body.dark-mode .social-icons a:hover {
+  color: #38bdf8 !important;
 }
 
 /* Patient Dashboard Dark Mode */
