@@ -20,6 +20,9 @@ export default function Footer() {
             </p>
 
             <div className="social-icons d-flex gap-3">
+              <a href="https://github.com/yousifamr2/heart-disease-prediction" target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>
+                <i className="fa-brands fa-github"></i>
+              </a>
               <a href="https://x.com" target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>
                 <i className="fa-brands fa-x-twitter"></i>
               </a>

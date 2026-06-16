@@ -28,8 +28,8 @@ export default function Docs() {
         <div className="docs-tabs">
           <button className={`doc-tab-btn ${activeTab === "guide" ? "active" : ""}`} onClick={() => setActiveTab("guide")}>Patient Guide</button>
           <button className={`doc-tab-btn ${activeTab === "factors" ? "active" : ""}`} onClick={() => setActiveTab("factors")}>Medical Factors</button>
-          <button className={`doc-tab-btn ${activeTab === "ecg" ? "active" : ""}`} onClick={() => setActiveTab("ecg")}>ECG Guide</button>
           <button className={`doc-tab-btn ${activeTab === "ai" ? "active" : ""}`} onClick={() => setActiveTab("ai")}>AI & Thresholds</button>
+          <button className={`doc-tab-btn ${activeTab === "ecg" ? "active" : ""}`} onClick={() => setActiveTab("ecg")}>ECG Guide</button>
         </div>
       </div>
 

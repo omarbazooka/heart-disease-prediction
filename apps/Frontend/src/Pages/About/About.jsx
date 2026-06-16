@@ -42,8 +42,11 @@ export default function About() {
           We are IT students from <strong>EELU Alexandria University</strong>, class of 2026. 
           Nabdak is our Graduation Project, aiming to leverage advanced artificial intelligence 
           and machine learning models to help predict cardiovascular disease risks. 
-          By integrating seamless lab uploads, dynamic patient dashboards, and instant AI-generated 
+          By integrating seamless lab uploads, dynamic patient dashboards, ECG analysis, and instant AI-generated 
           medical PDF reports, Nabdak provides a hybrid support tool for early heart care detection.
+        </p>
+        <p className="project-description" style={{ marginTop: "15px" }}>
+          Explore our open-source codebase and repository on <a href="https://github.com/yousifamr2/heart-disease-prediction" target="_blank" rel="noopener noreferrer" className="github-link">GitHub</a>.
         </p>
 
         <h3 className="section-title" style={{ marginTop: "40px" }}>The Team</h3>
