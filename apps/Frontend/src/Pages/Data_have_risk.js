@@ -24,6 +24,12 @@ function Home() {
   const [shapImage, setShapImage] =
     useState(null);
 
+  const [shapData, setShapData] =
+    useState(null);
+
+  const [activeShapTab, setActiveShapTab] =
+    useState("interactive");
+
   const navigate = useNavigate();
 
   // ================= GET DATA =================
@@ -68,10 +74,14 @@ function Home() {
       return;
     }
 
-    // ================= GET SHAP IMAGE =================
+    // ================= GET SHAP IMAGE & DATA =================
     if (parsedPrediction.show_shap) {
 
       fetchShapImage(
+        parsedPrediction.prediction_id
+      );
+
+      fetchShapData(
         parsedPrediction.prediction_id
       );
     }
@@ -109,6 +119,36 @@ function Home() {
     } catch (err) {
 
       console.log(err);
+
+    }
+  };
+
+  // ================= FETCH SHAP DATA =================
+  const fetchShapData = async (
+    predictionId
+  ) => {
+
+    try {
+
+      const token =
+        localStorage.getItem("token");
+
+      const res = await axios.get(
+        `${API_BASE_URL}/api/predictions/${predictionId}/shap/data`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.data && res.data.success) {
+        setShapData(res.data.data);
+      }
+
+    } catch (err) {
+
+      console.log("Error fetching SHAP data:", err);
 
     }
   };
@@ -249,27 +289,56 @@ function Home() {
 
         </div>
 
-        {/* ================= SHAP IMAGE ================= */}
-        {prediction?.show_shap &&
-          shapImage && (
+        {/* ================= SHAP IMAGE & INTERACTIVE CHART ================= */}
+        {prediction?.show_shap && (
 
-            <div className="shap-container">
+          <div className="shap-container">
 
-              <h3 className="shap-title">
+            <h3 className="shap-title">
 
-                The Most Effected Factor In The Result
+              The Most Effected Factor In The Result
 
-              </h3>
+            </h3>
 
-              <img
-                src={shapImage}
-                alt="SHAP Explanation"
-                className="shap-image"
-              />
+            {/* Tab controls */}
+            {shapData && shapImage && (
+              <div className="shap-tabs">
+                <button
+                  className={`shap-tab-btn ${activeShapTab === "interactive" ? "active" : ""}`}
+                  onClick={() => setActiveShapTab("interactive")}
+                >
+                  <i className="fa-solid fa-chart-column" style={{ marginRight: "6px" }}></i>
+                  Interactive Chart
+                </button>
+                <button
+                  className={`shap-tab-btn ${activeShapTab === "static" ? "active" : ""}`}
+                  onClick={() => setActiveShapTab("static")}
+                >
+                  <i className="fa-regular fa-image" style={{ marginRight: "6px" }}></i>
+                  Scientific Plot
+                </button>
+              </div>
+            )}
 
-            </div>
+            {/* Content area */}
+            {activeShapTab === "interactive" && shapData ? (
+              <InteractiveShapChart data={shapData} />
+            ) : (
+              shapImage && (
+                <div className="shap-image-wrapper">
+                  <img
+                    src={shapImage}
+                    alt="SHAP Explanation"
+                    className="shap-image"
+                  />
+                  <p className="shap-caption">Static Matplotlib visual explanation of model features.</p>
+                </div>
+              )
+            )}
 
-          )}
+          </div>
+
+        )}
 
         {/* REPORT */}
         {prediction?.show_report && (
@@ -393,6 +462,316 @@ function Home() {
 
       )}
 
+    </div>
+  );
+}
+
+// ==================== INTERACTIVE SHAP CHART COMPONENT ====================
+function InteractiveShapChart({ data }) {
+  const [hoveredBar, setHoveredBar] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    // Trigger slide-in animation shortly after mount
+    const timer = setTimeout(() => setAnimate(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!data || !data.top_features || data.top_features.length === 0) {
+    return <p className="no-data">No SHAP data available.</p>;
+  }
+
+  const features = data.top_features;
+  const maxVal = Math.max(...features.map(f => Math.abs(f.impact)), 0.10);
+  
+  // Calculate ticks
+  const tickCount = 6;
+  const ticks = [];
+  for (let i = 0; i < tickCount; i++) {
+    ticks.push((maxVal / (tickCount - 1)) * i);
+  }
+
+  // Layout constants
+  const width = 760;
+  const height = 460;
+  const margin = { left: 180, right: 40, top: 40, bottom: 50 };
+  const chartWidth = width - margin.left - margin.right;
+  const chartHeight = height - margin.top - margin.bottom;
+  const rowHeight = chartHeight / features.length;
+  const barHeight = 18;
+
+  const featureDescriptions = {
+    "ST slope": "Slope of peak exercise ST segment. Flat or downsloping suggests blocks.",
+    "oldpeak": "Exercise-induced ST depression relative to rest. Indicates risk of block.",
+    "chest pain type": "Type of chest pain reported. Typical/atypical are highly correlated with heart disease.",
+    "exercise angina": "Whether exercise induces chest pain/angina.",
+    "max heart rate": "Maximum heart rate achieved during exercise.",
+    "age": "Biological age. Risk increases naturally with age.",
+    "fasting blood sugar": "Whether blood sugar is above 120 mg/dL (indicator of diabetes).",
+    "cholesterol": "Serum cholesterol level. Desirable is below 200 mg/dL.",
+    "sex": "Biological sex (males statistically have higher rates of cardiovascular risk).",
+    "resting bp s": "Resting systolic blood pressure (mmHg). Higher values increase arterial strain.",
+    "resting ecg": "Resting electrocardiogram results showing electrical activity.",
+  };
+
+  const formatFeatureValue = (feature, val) => {
+    if (val === undefined || val === null || val === "N/A") return "N/A";
+    const numVal = Number(val);
+    switch (feature) {
+      case "sex":
+        return numVal === 1 ? "Male" : "Female";
+      case "chest pain type":
+        if (numVal === 1) return "Typical Angina (1)";
+        if (numVal === 2) return "Atypical Angina (2)";
+        if (numVal === 3) return "Non-anginal Pain (3)";
+        if (numVal === 4) return "Asymptomatic (4)";
+        return val;
+      case "fasting blood sugar":
+        return numVal === 1 ? "> 120 mg/dL (1)" : "≤ 120 mg/dL (0)";
+      case "exercise angina":
+        return numVal === 1 ? "Yes (1)" : "No (0)";
+      case "ST slope":
+        if (numVal === 1) return "Upsloping (1)";
+        if (numVal === 2) return "Flat (2)";
+        if (numVal === 3) return "Downsloping (3)";
+        return val;
+      case "resting ecg":
+        if (numVal === 0) return "Normal (0)";
+        if (numVal === 1) return "ST-T Wave Abnormality (1)";
+        if (numVal === 2) return "Left Ventricular Hypertrophy (2)";
+        return val;
+      case "age":
+        return `${val} years`;
+      case "resting bp s":
+        return `${val} mmHg`;
+      case "cholesterol":
+        return `${val} mg/dL`;
+      case "max heart rate":
+        return `${val} bpm`;
+      case "oldpeak":
+        return `${val} (ST depression)`;
+      default:
+        return String(val);
+    }
+  };
+
+  const handleMouseMove = (e, feature) => {
+    const card = e.currentTarget.closest(".shap-chart-card");
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setTooltipPos({ x, y });
+    setHoveredBar(feature);
+  };
+
+  return (
+    <div className="shap-chart-card">
+      <div className="shap-chart-header">
+        <h4 className="shap-chart-subtitle">Feature Importance (SHAP)</h4>
+      </div>
+
+      <div className="shap-svg-wrapper">
+        <svg viewBox={`0 0 ${width} ${height}`} className="shap-svg">
+          <defs>
+            {/* Gradient for bars */}
+            <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+            <linearGradient id="barGradientHover" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
+            
+            {/* Subtle drop shadow filter for bars */}
+            <filter id="barShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="1" dy="1" stdDeviation="1.5" floodOpacity="0.1" />
+            </filter>
+          </defs>
+
+          {/* Border surrounding the entire plot */}
+          <rect
+            x={margin.left}
+            y={margin.top}
+            width={chartWidth}
+            height={chartHeight}
+            fill="none"
+            stroke="#2c3e50"
+            strokeWidth="1.2"
+          />
+
+          {/* Grid lines (vertical ticks) */}
+          {ticks.map((tick, idx) => {
+            const x = margin.left + (tick / maxVal) * chartWidth;
+            return (
+              <g key={idx}>
+                {idx > 0 && idx < ticks.length - 1 && (
+                  <line
+                    x1={x}
+                    y1={margin.top}
+                    x2={x}
+                    y2={margin.top + chartHeight}
+                    stroke="#e2e8f0"
+                    strokeWidth="0.8"
+                    strokeDasharray="2,2"
+                  />
+                )}
+                <line
+                  x1={x}
+                  y1={margin.top + chartHeight}
+                  x2={x}
+                  y2={margin.top + chartHeight + 5}
+                  stroke="#2c3e50"
+                  strokeWidth="1.2"
+                />
+                <text
+                  x={x}
+                  y={margin.top + chartHeight + 20}
+                  textAnchor="middle"
+                  className="shap-tick-text"
+                  fontSize="11"
+                  fill="#475569"
+                >
+                  {tick.toFixed(2)}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Render Bars and Labels */}
+          {features.map((item, idx) => {
+            const rowY = margin.top + idx * rowHeight;
+            const barY = rowY + (rowHeight - barHeight) / 2;
+            const absoluteImpact = Math.abs(item.impact);
+            const targetWidth = (absoluteImpact / maxVal) * chartWidth;
+            const currentWidth = animate ? targetWidth : 0;
+            
+            const isHovered = hoveredBar && hoveredBar.feature === item.feature;
+
+            return (
+              <g key={idx} className="shap-row-group">
+                {/* Row Hover Background */}
+                <rect
+                  x={margin.left - 170}
+                  y={rowY + 1}
+                  width={width - 20}
+                  height={rowHeight - 2}
+                  fill={isHovered ? "rgba(241, 245, 249, 0.6)" : "transparent"}
+                  rx="4"
+                  style={{ transition: "fill 0.2s ease" }}
+                />
+
+                {/* Y-axis Label */}
+                <text
+                  x={margin.left - 15}
+                  y={rowY + rowHeight / 2 + 4}
+                  textAnchor="end"
+                  className="shap-y-label"
+                  fontSize="12.5"
+                  fontWeight={isHovered ? "600" : "500"}
+                  fill={isHovered ? "#1e293b" : "#475569"}
+                  style={{ transition: "all 0.2s ease" }}
+                >
+                  {item.feature}
+                </text>
+
+                {/* Bar */}
+                <rect
+                  x={margin.left}
+                  y={barY}
+                  width={currentWidth}
+                  height={barHeight}
+                  fill={isHovered ? "url(#barGradientHover)" : "url(#barGradient)"}
+                  filter="url(#barShadow)"
+                  rx="2"
+                  className="shap-bar"
+                  style={{
+                    transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1), fill 0.2s ease",
+                    cursor: "pointer"
+                  }}
+                  onMouseMove={(e) => handleMouseMove(e, item)}
+                  onMouseLeave={() => setHoveredBar(null)}
+                />
+
+                {/* Value overlay inside the bar */}
+                {isHovered && absoluteImpact > 0.01 && (
+                  <text
+                    x={margin.left + currentWidth - 8}
+                    y={barY + barHeight / 2 + 4}
+                    textAnchor="end"
+                    fontSize="9.5"
+                    fontWeight="700"
+                    fill="#ffffff"
+                    pointerEvents="none"
+                  >
+                    {absoluteImpact.toFixed(3)}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Bottom X-axis Title */}
+          <text
+            x={margin.left + chartWidth / 2}
+            y={height - 10}
+            textAnchor="middle"
+            className="shap-x-title"
+            fontSize="13"
+            fontWeight="600"
+            fill="#334155"
+          >
+            Feature Importance
+          </text>
+        </svg>
+      </div>
+
+      {/* Floating Tooltip */}
+      {hoveredBar && (
+        <div
+          className="shap-tooltip"
+          style={{
+            left: `${tooltipPos.x + 15}px`,
+            top: `${tooltipPos.y + 15}px`,
+          }}
+        >
+          <div className="tooltip-header">
+            <span className="tooltip-feature-name">{hoveredBar.feature}</span>
+          </div>
+          <div className="tooltip-body">
+            <div className="tooltip-row">
+              <span className="tooltip-label">Description:</span>
+              <span className="tooltip-value desc">{featureDescriptions[hoveredBar.feature] || "N/A"}</span>
+            </div>
+            <div className="tooltip-row highlight-row">
+              <span className="tooltip-label">Your Measured Value:</span>
+              <span className="tooltip-value user-val">{formatFeatureValue(hoveredBar.feature, hoveredBar.value)}</span>
+            </div>
+            <div className="tooltip-row">
+              <span className="tooltip-label">SHAP Importance Score:</span>
+              <span className="tooltip-value score">{Math.abs(hoveredBar.impact).toFixed(4)}</span>
+            </div>
+            <div className="tooltip-row">
+              <span className="tooltip-label">Risk Direction:</span>
+              <span className={`tooltip-value direction ${hoveredBar.direction}`}>
+                {hoveredBar.direction === "increase" ? (
+                  <>
+                    <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: "4px" }}></i>
+                    Increases Risk
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-circle-check" style={{ marginRight: "4px" }}></i>
+                    Decreases Risk
+                  </>
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
