@@ -28,6 +28,7 @@ export default function Docs() {
         <div className="docs-tabs">
           <button className={`doc-tab-btn ${activeTab === "guide" ? "active" : ""}`} onClick={() => setActiveTab("guide")}>Patient Guide</button>
           <button className={`doc-tab-btn ${activeTab === "factors" ? "active" : ""}`} onClick={() => setActiveTab("factors")}>Medical Factors</button>
+          <button className={`doc-tab-btn ${activeTab === "ecg" ? "active" : ""}`} onClick={() => setActiveTab("ecg")}>ECG Guide</button>
           <button className={`doc-tab-btn ${activeTab === "ai" ? "active" : ""}`} onClick={() => setActiveTab("ai")}>AI & Thresholds</button>
         </div>
       </div>
@@ -69,6 +70,39 @@ export default function Docs() {
                   <p>{f.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "ecg" && (
+          <div className="tab-content animate-fade">
+            <h2>ECG Analysis Guide</h2>
+            <p className="lead-text">How Nabdak visualizes and analyzes Electrocardiogram (ECG) data:</p>
+            <div className="ecg-guide-box">
+              <div className="ecg-step-card">
+                <h3>1. Lab Upload</h3>
+                <p>
+                  Partner labs upload your raw ECG records using standard WFDB format (e.g. <code>.dat</code> and <code>.hea</code> files) via the secure lab portal.
+                </p>
+              </div>
+              <div className="ecg-step-card">
+                <h3>2. AI Processing</h3>
+                <p>
+                  Our internal AI pipeline analyzes the signal peaks, identifies intervals (like QRS complexes, P waves, and T waves), and checks for common arrhythmias or irregularities.
+                </p>
+              </div>
+              <div className="ecg-step-card">
+                <h3>3. Interactive Visualizations</h3>
+                <p>
+                  Once analyzed, a high-resolution signal chart is generated, showing the waveforms clearly. Patients and doctors can view this interactive graph directly on the dashboard.
+                </p>
+              </div>
+              <div className="ecg-step-card">
+                <h3>4. ECG PDF Reports</h3>
+                <p>
+                  A comprehensive PDF medical report with details on detected heart rate, anomalies, and clinical findings can be downloaded with a single click.
+                </p>
+              </div>
             </div>
           </div>
         )}
