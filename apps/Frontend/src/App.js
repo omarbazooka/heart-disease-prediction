@@ -18,6 +18,7 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import LabPortal from "./Pages/LabPortal";
 import Docs from "./Pages/Docs/Docs";
 import About from "./Pages/About/About";
+import Contact from "./Pages/Contact/Contact";
 
 import { AuthProvider } from "./Context/AuthContext";
 
@@ -57,6 +58,7 @@ export default function App() {
   <Route path="/learnmore" element={<Learnmore />} />
   <Route path="/docs" element={<Docs />} />
   <Route path="/about" element={<About />} />
+  <Route path="/contact" element={<Contact />} />
 
   {/* PROTECTED ROUTES */}
   <Route

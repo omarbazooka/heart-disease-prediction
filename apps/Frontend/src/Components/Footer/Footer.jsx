@@ -47,7 +47,7 @@ export default function Footer({ isDashboard }) {
               <li><Link to="/prediction" style={{ color: "inherit", textDecoration: "none" }}>Heart Care</Link></li>
               <li><Link to="/ecg" style={{ color: "inherit", textDecoration: "none" }}>Health Care</Link></li>
               <li><Link to="/about" style={{ color: "inherit", textDecoration: "none" }}>About Us</Link></li>
-              <li><Link to="/profile" style={{ color: "inherit", textDecoration: "none" }}>Contact Us</Link></li>
+              <li><Link to="/contact" style={{ color: "inherit", textDecoration: "none" }}>Contact Us</Link></li>
             </ul>
           </div>
 
