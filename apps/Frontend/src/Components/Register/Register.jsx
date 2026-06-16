@@ -138,7 +138,7 @@ const Register = () => {
         >
           <div className="brand">
             <img src={logo} alt="logo" className="brand-logo" />
-            <h1>Heart Diseases</h1>
+            <h1>Nabdak</h1>
           </div>
         </div>
 

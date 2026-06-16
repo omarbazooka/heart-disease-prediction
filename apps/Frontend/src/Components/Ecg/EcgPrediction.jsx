@@ -181,6 +181,19 @@ export default function EcgPrediction() {
             : "Use Start ECG to run or refresh AI analysis on your latest recording."}
         </p>
 
+        {status?.hasEcgTests && (
+          <div className="ecg-actions" style={{ marginTop: "1rem" }}>
+            <button
+              type="button"
+              className="btn start"
+              onClick={handleRunAnalysis}
+              disabled={running}
+            >
+              {running ? "Analyzing..." : "Start ECG Analysis →"}
+            </button>
+          </div>
+        )}
+
         {chartUrl && (
           <div>
             <p className="report-title" style={{ marginTop: "1.5rem" }}>

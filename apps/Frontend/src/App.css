@@ -3,6 +3,8 @@ html, body {
   padding: 0;
   height: 100%;
   font-family: sans-serif;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* ===== APP LAYOUT ===== */
@@ -10,6 +12,9 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 
   /* 🌈 الخلفية الموحدة */
   background: linear-gradient(
@@ -26,6 +31,9 @@ html, body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* ===== REMOVE DEFAULT REACT STYLES ===== */

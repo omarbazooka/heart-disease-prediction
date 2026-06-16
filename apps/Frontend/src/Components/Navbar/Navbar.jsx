@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import logo from "../../Image/logo.png";
 import profile from "../../Image/profile.png";
+import { FaMoon, FaSun } from "react-icons/fa";
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -10,6 +11,9 @@ export default function Navbar() {
   const location = useLocation();
 
   const [isLogged, setIsLogged] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
   const isProfilePage = location.pathname === "/profile";
 
@@ -17,6 +21,16 @@ export default function Navbar() {
     const user = localStorage.getItem("user");
     setIsLogged(!!user);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add("dark-mode");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark-mode");
+      localStorage.setItem("theme", "light");
+    }
+  }, [darkMode]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -55,10 +69,10 @@ export default function Navbar() {
             <Link className="nav-link" to="/the_general">HOME</Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link" to="/docs">DOCS</Link>
+            <Link className="nav-link" to="/heart">HEART</Link>
           </li>
           <li className="nav-item">
-            <Link className="nav-link" to="/heart">HEART</Link>
+            <Link className="nav-link" to="/docs">DOCS</Link>
           </li>
           <li className="nav-item">
             <Link className="nav-link" to="/about">ABOUT</Link>
@@ -66,7 +80,17 @@ export default function Navbar() {
         </ul>
 
         {/* Buttons */}
-        <div className="d-flex justify-content-center gap-2 mt-3 mt-lg-0">
+        <div className="d-flex justify-content-center align-items-center gap-2 mt-3 mt-lg-0">
+          
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className="btn btn-dark-mode rounded-circle d-flex align-items-center justify-content-center"
+            style={{ width: "40px", height: "40px", padding: 0, border: "1.5px solid var(--border-light, #e0eef3)", background: "transparent", color: "var(--text-title, #0f3d4c)" }}
+            aria-label="Toggle Dark Mode"
+          >
+            {darkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
+          </button>
 
           {!isLogged ? (
             <>
@@ -95,10 +119,10 @@ export default function Navbar() {
             <>
               <button
                 onClick={() => navigate("/profile")}
-                className="custom-btn rounded-pill px-2"
+                className="custom-btn rounded-pill px-4 py-2 d-flex align-items-center gap-2"
               >
                 My Dashboard
-                <img src={profile} className="profile" alt="profile" />
+                <img src={profile} className="profile" alt="profile" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
               </button>
 
               <button

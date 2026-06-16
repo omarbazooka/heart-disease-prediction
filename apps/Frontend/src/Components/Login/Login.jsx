@@ -88,7 +88,6 @@ const Login = () => {
           password: form.password,
         });
 
-        alert("Login Successfully");
         const token = res.data.token || res.data.data?.token;
         if (token) localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(res.data.data || res.data.user));
@@ -119,7 +118,6 @@ const Login = () => {
         );
 
         if (matchedLab) {
-          alert("Lab Login Successfully");
           localStorage.setItem("lab", JSON.stringify(matchedLab));
           setErrors({});
           navigate("/lab-portal");
@@ -255,7 +253,7 @@ const Login = () => {
         >
           <div className="logo-title-wrapper">
             <img src={logo} className="logo" alt="logo" />
-            <h1>Heart Diseases</h1>
+            <h1>Nabdak</h1>
           </div>
         </div>
       </div>

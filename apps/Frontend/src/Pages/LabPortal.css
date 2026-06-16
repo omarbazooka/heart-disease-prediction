@@ -198,3 +198,24 @@
   color: #dc2626;
   font-size: 14px;
 }
+
+@media (max-width: 768px) {
+  .lab-portal-container {
+    padding: 20px 10px;
+  }
+  .lab-portal-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  .lab-portal-card {
+    padding: 20px;
+  }
+  .portal-title {
+    font-size: 22px;
+  }
+  .upload-area {
+    padding: 25px 15px;
+  }
+}

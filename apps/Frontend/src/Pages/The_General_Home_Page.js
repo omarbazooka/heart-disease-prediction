@@ -43,7 +43,7 @@ function Home() {
       localStorage.setItem("prediction", JSON.stringify(predictionData));
       localStorage.setItem("prediction_id", predictionData.prediction_id);
 
-      if (predictionData.probability < 70) {
+      if (predictionData.probability < 50) {
         navigate("/have_no_risk");
       } else {
         navigate("/have_risk");

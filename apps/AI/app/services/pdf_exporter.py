@@ -59,7 +59,22 @@ def html_to_pdf(html: str) -> bytes:
         errors["playwright"] = str(e)
         print(f"[pdf_exporter] Playwright unavailable: {e}")
 
+    # ── 3. xhtml2pdf ──────────────────────────────────────────────────
+    try:
+        from xhtml2pdf import pisa
+        print("[pdf_exporter] Trying xhtml2pdf fallback...")
+        pdf_io = io.BytesIO()
+        pisa_status = pisa.CreatePDF(html, dest=pdf_io)
+        if not pisa_status.err:
+            return pdf_io.getvalue()
+        else:
+            errors["xhtml2pdf"] = f"xhtml2pdf error code: {pisa_status.err}"
+            print(f"[pdf_exporter] xhtml2pdf failed: {pisa_status.err}")
+    except Exception as e:
+        errors["xhtml2pdf"] = str(e)
+        print(f"[pdf_exporter] xhtml2pdf unavailable: {e}")
+
     raise RuntimeError(
-        "All high-quality PDF backends failed (WeasyPrint and Playwright).\n" +
+        "All PDF backends failed (WeasyPrint, Playwright, and xhtml2pdf).\n" +
         "\n".join(f"  {k}: {v}" for k, v in errors.items())
     )

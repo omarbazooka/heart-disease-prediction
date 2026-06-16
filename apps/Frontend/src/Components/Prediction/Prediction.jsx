@@ -49,7 +49,9 @@ const Prediction = () => {
   const [loading, setLoading] = useState(false);
   const [labs, setLabs] = useState([]);
   const [hasLabTests, setHasLabTests] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [latestLabTest, setLatestLabTest] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [userLocation, setUserLocation] = useState(null);
 
   const navigate = useNavigate();
@@ -83,6 +85,7 @@ const Prediction = () => {
         console.log(error);
       }
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ================= FETCH LABS =================
@@ -130,7 +133,7 @@ const Prediction = () => {
 
           decision_label:
             res.data.prediction_result ||
-            (res.data.prediction_percentage >= 70
+            (res.data.prediction_percentage >= 50
               ? "High Risk"
               : "Low Risk"),
         });
@@ -223,7 +226,7 @@ const Prediction = () => {
         normalizedPrediction.includes("low") ||
         (
           predictionData.probability != null &&
-          predictionData.probability < 70
+          predictionData.probability < 50
         )
       ) {
         navigate("/have_no_risk");
@@ -232,7 +235,7 @@ const Prediction = () => {
         normalizedPrediction.includes("high") ||
         (
           predictionData.probability != null &&
-          predictionData.probability >= 70
+          predictionData.probability >= 50
         )
       ) {
         navigate("/have_risk");
@@ -309,7 +312,7 @@ const Prediction = () => {
           <br />
 
           <span className="highlight">
-            If the percentage is higher than 70%
+            If the percentage is higher than 50%
             it means you have Heart Diseases
           </span>
         </p>
