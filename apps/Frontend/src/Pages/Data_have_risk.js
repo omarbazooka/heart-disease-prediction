@@ -21,14 +21,8 @@ function Home() {
   const [hospitals, setHospitals] =
     useState([]);
 
-  const [shapImage, setShapImage] =
-    useState(null);
-
   const [shapData, setShapData] =
     useState(null);
-
-  const [activeShapTab, setActiveShapTab] =
-    useState("interactive");
 
   const navigate = useNavigate();
 
@@ -74,12 +68,8 @@ function Home() {
       return;
     }
 
-    // ================= GET SHAP IMAGE & DATA =================
+    // ================= GET FEATURE IMPORTANCE DATA =================
     if (parsedPrediction.show_shap) {
-
-      fetchShapImage(
-        parsedPrediction.prediction_id
-      );
 
       fetchShapData(
         parsedPrediction.prediction_id
@@ -91,39 +81,7 @@ function Home() {
 
   }, [navigate]);
 
-  // ================= FETCH SHAP IMAGE =================
-  const fetchShapImage = async (
-    predictionId
-  ) => {
-
-    try {
-
-      const token =
-        localStorage.getItem("token");
-
-      const res = await axios.get(
-        `${API_BASE_URL}/api/predictions/${predictionId}/shap`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          responseType: "blob",
-        }
-      );
-
-      const imageUrl =
-        URL.createObjectURL(res.data);
-
-      setShapImage(imageUrl);
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-  };
-
-  // ================= FETCH SHAP DATA =================
+  // ================= GET SHAP DATA =================
   const fetchShapData = async (
     predictionId
   ) => {
@@ -289,51 +247,21 @@ function Home() {
 
         </div>
 
-        {/* ================= SHAP IMAGE & INTERACTIVE CHART ================= */}
+        {/* ================= INTERACTIVE FEATURE IMPORTANCE CHART ================= */}
         {prediction?.show_shap && (
 
           <div className="shap-container">
 
             <h3 className="shap-title">
 
-              The Most Effected Factor In The Result
+              The Most Effected Factors In The Result
 
             </h3>
 
-            {/* Tab controls */}
-            {shapData && shapImage && (
-              <div className="shap-tabs">
-                <button
-                  className={`shap-tab-btn ${activeShapTab === "interactive" ? "active" : ""}`}
-                  onClick={() => setActiveShapTab("interactive")}
-                >
-                  <i className="fa-solid fa-chart-column" style={{ marginRight: "6px" }}></i>
-                  Interactive Chart
-                </button>
-                <button
-                  className={`shap-tab-btn ${activeShapTab === "static" ? "active" : ""}`}
-                  onClick={() => setActiveShapTab("static")}
-                >
-                  <i className="fa-regular fa-image" style={{ marginRight: "6px" }}></i>
-                  Scientific Plot
-                </button>
-              </div>
-            )}
-
-            {/* Content area */}
-            {activeShapTab === "interactive" && shapData ? (
+            {shapData ? (
               <InteractiveShapChart data={shapData} />
             ) : (
-              shapImage && (
-                <div className="shap-image-wrapper">
-                  <img
-                    src={shapImage}
-                    alt="SHAP Explanation"
-                    className="shap-image"
-                  />
-                  <p className="shap-caption">Static Matplotlib visual explanation of model features.</p>
-                </div>
-              )
+              <p className="no-data">Loading feature importance data...</p>
             )}
 
           </div>
@@ -389,63 +317,63 @@ function Home() {
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([area, areaHospitals]) => (
 
-                <div key={area} className="area-group">
+                  <div key={area} className="area-group">
 
-                  <div className="city-box">
-                    <h4 className="city-title">{area}</h4>
+                    <div className="city-box">
+                      <h4 className="city-title">{area}</h4>
+                    </div>
+
+                    <div className="hospitals-container">
+
+                      {areaHospitals.map((hospital) => (
+
+                        <a
+                          key={hospital.id}
+                          href={hospital.google_maps_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hospital-card"
+                        >
+
+                          {/* HOSPITAL NAME */}
+                          <p className="hospital-name">
+
+                            {hospital.name}
+
+                          </p>
+
+                          {/* LOCATION */}
+                          <div className="location">
+
+                            <FaMapMarkerAlt className="location_icon" />
+
+                            <span className="location_name">
+
+                              {hospital.area}
+
+                            </span>
+
+                          </div>
+
+                          {/* GOOGLE MAP */}
+                          <iframe
+                            title={hospital.name}
+                            src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                              hospital.name + " " + hospital.area
+                            )}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                            className="hospital-map"
+                            loading="lazy"
+                          ></iframe>
+
+                        </a>
+
+                      ))}
+
+                    </div>
+
                   </div>
 
-                  <div className="hospitals-container">
-
-                    {areaHospitals.map((hospital) => (
-
-                      <a
-                        key={hospital.id}
-                        href={hospital.google_maps_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hospital-card"
-                      >
-
-                        {/* HOSPITAL NAME */}
-                        <p className="hospital-name">
-
-                          {hospital.name}
-
-                        </p>
-
-                        {/* LOCATION */}
-                        <div className="location">
-
-                          <FaMapMarkerAlt className="location_icon" />
-
-                          <span className="location_name">
-
-                            {hospital.area}
-
-                          </span>
-
-                        </div>
-
-                        {/* GOOGLE MAP */}
-                        <iframe
-                          title={hospital.name}
-                          src={`https://maps.google.com/maps?q=${encodeURIComponent(
-                            hospital.name + " " + hospital.area
-                          )}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                          className="hospital-map"
-                          loading="lazy"
-                        ></iframe>
-
-                      </a>
-
-                    ))}
-
-                  </div>
-
-                </div>
-
-              ))
+                ))
 
             ) : (
 
@@ -484,7 +412,7 @@ function InteractiveShapChart({ data }) {
 
   const features = data.top_features;
   const maxVal = Math.max(...features.map(f => Math.abs(f.impact)), 0.10);
-  
+
   // Calculate ticks
   const tickCount = 6;
   const ticks = [];
@@ -569,7 +497,7 @@ function InteractiveShapChart({ data }) {
   return (
     <div className="shap-chart-card">
       <div className="shap-chart-header">
-        <h4 className="shap-chart-subtitle">Feature Importance (SHAP)</h4>
+        <h4 className="shap-chart-subtitle">Feature Importance</h4>
       </div>
 
       <div className="shap-svg-wrapper">
@@ -584,7 +512,7 @@ function InteractiveShapChart({ data }) {
               <stop offset="0%" stopColor="#1d4ed8" />
               <stop offset="100%" stopColor="#2563eb" />
             </linearGradient>
-            
+
             {/* Subtle drop shadow filter for bars */}
             <filter id="barShadow" x="-10%" y="-10%" width="120%" height="120%">
               <feDropShadow dx="1" dy="1" stdDeviation="1.5" floodOpacity="0.1" />
@@ -647,7 +575,7 @@ function InteractiveShapChart({ data }) {
             const absoluteImpact = Math.abs(item.impact);
             const targetWidth = (absoluteImpact / maxVal) * chartWidth;
             const currentWidth = animate ? targetWidth : 0;
-            
+
             const isHovered = hoveredBar && hoveredBar.feature === item.feature;
 
             return (
@@ -713,18 +641,7 @@ function InteractiveShapChart({ data }) {
             );
           })}
 
-          {/* Bottom X-axis Title */}
-          <text
-            x={margin.left + chartWidth / 2}
-            y={height - 10}
-            textAnchor="middle"
-            className="shap-x-title"
-            fontSize="13"
-            fontWeight="600"
-            fill="#334155"
-          >
-            Feature Importance
-          </text>
+          {/* Bottom X-axis Title (Removed) */}
         </svg>
       </div>
 
@@ -750,7 +667,7 @@ function InteractiveShapChart({ data }) {
               <span className="tooltip-value user-val">{formatFeatureValue(hoveredBar.feature, hoveredBar.value)}</span>
             </div>
             <div className="tooltip-row">
-              <span className="tooltip-label">SHAP Importance Score:</span>
+              <span className="tooltip-label">Importance Score:</span>
               <span className="tooltip-value score">{Math.abs(hoveredBar.impact).toFixed(4)}</span>
             </div>
             <div className="tooltip-row">
