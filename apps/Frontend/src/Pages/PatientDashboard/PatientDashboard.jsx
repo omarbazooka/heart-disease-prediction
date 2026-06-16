@@ -430,6 +430,20 @@ export default function PatientDashboard() {
   const removeToast = (id) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
   useEffect(() => {
+    let meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'viewport';
+      document.head.appendChild(meta);
+    }
+    const originalContent = meta.getAttribute('content') || 'width=device-width, initial-scale=1';
+    meta.setAttribute('content', 'width=1280');
+    return () => {
+      meta.setAttribute('content', originalContent);
+    };
+  }, []);
+
+  useEffect(() => {
     const saved = localStorage.getItem("user");
     if (!saved) {
       navigate("/login");
