@@ -117,7 +117,7 @@ export default function App() {
         </div>
 
         {/* FOOTER */}
-        {!hideFooter && <Footer />}
+        {!hideFooter && <Footer isDashboard={location.pathname === "/profile"} />}
 
       </div>
     </AuthProvider>

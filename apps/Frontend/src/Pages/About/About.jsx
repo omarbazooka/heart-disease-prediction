@@ -3,20 +3,20 @@ import "./About.css";
 
 export default function About() {
   const row1 = [
-    { name: "Youssef Amr Saeed", role: "Backend Developer" },
-    { name: "Youssef Mohamed Bassiony", role: "Backend Developer" },
-    { name: "Abdelrahman Essam Sheredah", role: "Backend Developer" }
+    { name: "Omar Ahmed Mohamed", role: "AI Engineer" },
+    { name: "Youssef Amr Saeed", role: "Backend Developer" }
   ];
 
   const row2 = [
-    { name: "Omar Ahmed Mohamed", role: "AI Engineer" },
-    { name: "Marwan Yaser Elserafy", role: "AI Engineer" }
-  ];
-
-  const row3 = [
     { name: "Ranim Mohamed Elsayed", role: "Frontend Developer" },
     { name: "George Anwar Maksadallah", role: "UI/UX Designer" },
     { name: "Samar Hamza Mbry", role: "Frontend Developer" }
+  ];
+
+  const row3 = [
+    { name: "Abdelrahman Essam Sheredah", role: "Backend Developer" },
+    { name: "Marwan Yaser Elserafy", role: "AI Engineer" },
+    { name: "Youssef Mohamed Bassiony", role: "Backend Developer" }
   ];
 
   const renderMember = (member, idx) => (
@@ -51,10 +51,10 @@ export default function About() {
 
         <h3 className="section-title" style={{ marginTop: "40px" }}>The Team</h3>
         <div className="team-container">
-          <div className="team-row row-three">
+          <div className="team-row row-two">
             {row1.map(renderMember)}
           </div>
-          <div className="team-row row-two">
+          <div className="team-row row-three">
             {row2.map(renderMember)}
           </div>
           <div className="team-row row-three">

@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 import logo from "../../Image/logo.png"; // 👈 نفس مسار اللوجو عندك
 import "../Footer/Footer.css";
 
-export default function Footer() {
+export default function Footer({ isDashboard }) {
+  const colClass = isDashboard ? "col-6 col-md-3 mb-3" : "col-md-3 mb-3";
+
   return (
     <footer className="footer">
       <div className="container">
         <div className="row text-start">
           {/* Column 1 */}
-          <div className="col-md-3 mb-3">
+          <div className={colClass}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <img src={logo} className="logo" alt="logo" />
               <span className="brand">Nabdak</span>
@@ -39,7 +41,7 @@ export default function Footer() {
           </div>
 
           {/* Column 2 */}
-          <div className="col-md-3 mb-3">
+          <div className={colClass}>
             <h6 className="footer-title">Heart Disease</h6>
             <ul className="footer-list">
               <li><Link to="/prediction" style={{ color: "inherit", textDecoration: "none" }}>Heart Care</Link></li>
@@ -50,7 +52,7 @@ export default function Footer() {
           </div>
 
           {/* Column 3 */}
-          <div className="col-md-3 mb-3">
+          <div className={colClass}>
             <h6 className="footer-title">Labs</h6>
             <ul className="footer-list">
               <li><a href="https://almokhtabar.com/ar/%d8%a7%d9%84%d9%81%d8%b1%d9%88%d8%b9/" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>AlMokhtabar</a></li>
@@ -61,7 +63,7 @@ export default function Footer() {
           </div>
 
           {/* Column 4 */}
-          <div className="col-md-3 mb-3">
+          <div className={colClass}>
             <h6 className="footer-title">Resources</h6>
             <ul className="footer-list">
               <li><a href="https://www.heart.org/" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>AHA</a></li>

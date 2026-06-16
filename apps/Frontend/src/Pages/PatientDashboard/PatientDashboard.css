@@ -26,6 +26,9 @@
   padding: 24px 20px 48px;
   font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
   color: var(--pd-text);
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
 }
 
 .pd-header {
