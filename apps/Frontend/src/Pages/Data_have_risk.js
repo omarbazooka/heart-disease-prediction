@@ -430,17 +430,17 @@ function InteractiveShapChart({ data }) {
   const barHeight = 18;
 
   const featureDescriptions = {
-    "ST slope": "Slope of peak exercise ST segment. Flat or downsloping suggests blocks.",
-    "oldpeak": "Exercise-induced ST depression relative to rest. Indicates risk of block.",
-    "chest pain type": "Type of chest pain reported. Typical/atypical are highly correlated with heart disease.",
-    "exercise angina": "Whether exercise induces chest pain/angina.",
-    "max heart rate": "Maximum heart rate achieved during exercise.",
-    "age": "Biological age. Risk increases naturally with age.",
-    "fasting blood sugar": "Whether blood sugar is above 120 mg/dL (indicator of diabetes).",
-    "cholesterol": "Serum cholesterol level. Desirable is below 200 mg/dL.",
-    "sex": "Biological sex (males statistically have higher rates of cardiovascular risk).",
-    "resting bp s": "Resting systolic blood pressure (mmHg). Higher values increase arterial strain.",
-    "resting ecg": "Resting electrocardiogram results showing electrical activity.",
+    "ST slope": "How your heart recovers after exercise. A flat or downward slope can mean the heart muscle isn't getting enough oxygen.",
+    "oldpeak": "Stress-induced heart strain. Measures how much your heart struggled during physical activity compared to when resting.",
+    "chest pain type": "The kind of chest discomfort you feel. Typical heart pain is a tight, squeezing pressure, while other types are less specific.",
+    "exercise angina": "Chest pain triggered specifically by physical exertion. If yes, it suggests blood vessels might be narrowed.",
+    "max heart rate": "The highest speed your heart reached during exercise. Lower maximum rates can indicate a weaker cardiac response.",
+    "age": "Your age. Heart disease risk naturally increases as blood vessels age and stiffen over time.",
+    "fasting blood sugar": "The amount of sugar in your blood after fasting. High blood sugar can damage blood vessels and speed up heart risks.",
+    "cholesterol": "The level of fat in your blood. High cholesterol can build up inside your arteries, creating dangerous blockages.",
+    "sex": "Biological sex. Men statistically tend to develop heart issues at an earlier age than women.",
+    "resting bp s": "Your resting blood pressure. High pressure forces your heart to work much harder and damages arterial walls.",
+    "resting ecg": "An electrical recording of your resting heart. It detects irregular rhythms or signs of previous heart strain.",
   };
 
   const formatFeatureValue = (feature, val) => {
