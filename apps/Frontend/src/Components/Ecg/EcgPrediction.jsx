@@ -209,7 +209,11 @@ export default function EcgPrediction() {
         </p>
 
         {!status?.hasEcgTests && (
-          <div className="labs-section">
+          <>
+            <p className="info-text">
+              You Should Go To Trusted Medical Labs So You Can Start Prediction
+            </p>
+            <div className="labs-section">
             <div className="labs-top">
               <div>
                 <h3 className="labs-title">Trusted Medical Labs</h3>
@@ -240,6 +244,7 @@ export default function EcgPrediction() {
               ))}
             </div>
           </div>
+          </>
         )}
 
         {status?.hasEcgTests && (
