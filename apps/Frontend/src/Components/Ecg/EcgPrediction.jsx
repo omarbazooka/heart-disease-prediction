@@ -210,40 +210,38 @@ export default function EcgPrediction() {
 
         {!status?.hasEcgTests && (
           <>
-            <p className="info-text">
-              You Should Go To Trusted Medical Labs So You Can Start Prediction
-            </p>
+
             <div className="labs-section">
-            <div className="labs-top">
-              <div>
-                <h3 className="labs-title">Trusted Medical Labs</h3>
-                <p className="labs-sub">There Is Thousands Of Trusted Medical Labs</p>
+              <div className="labs-top">
+                <div>
+                  <h3 className="labs-title">Trusted Medical Labs</h3>
+                  <p className="labs-sub">There Is Thousands Of Trusted Medical Labs</p>
+                </div>
+              </div>
+              <div className="labs-wrapper">
+                {labs.map((lab) => (
+                  <a
+                    key={lab.id}
+                    href={labLinks[lab.name]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="lab-card"
+                  >
+                    <img src={labImages[lab.name]} alt={lab.name} className="lab-image" />
+                    <div className="lab-details">
+                      <div className="lab-header">
+                        <h4>{lab.name}</h4>
+                        <span className="lab-rating">⭐ {lab.rating}</span>
+                      </div>
+                      <p className="lab-address">
+                        <BsGeoAltFill />
+                        {lab.address}
+                      </p>
+                    </div>
+                  </a>
+                ))}
               </div>
             </div>
-            <div className="labs-wrapper">
-              {labs.map((lab) => (
-                <a
-                  key={lab.id}
-                  href={labLinks[lab.name]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="lab-card"
-                >
-                  <img src={labImages[lab.name]} alt={lab.name} className="lab-image" />
-                  <div className="lab-details">
-                    <div className="lab-header">
-                      <h4>{lab.name}</h4>
-                      <span className="lab-rating">⭐ {lab.rating}</span>
-                    </div>
-                    <p className="lab-address">
-                      <BsGeoAltFill />
-                      {lab.address}
-                    </p>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
           </>
         )}
 
@@ -288,12 +286,12 @@ function InteractiveEcgChart({ data }) {
   useEffect(() => {
     // Trigger slide-in animation shortly after mount
     const timer = setTimeout(() => setAnimate(true), 100);
-    
+
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
     window.addEventListener("resize", handleResize);
-    
+
     return () => {
       clearTimeout(timer);
       window.removeEventListener("resize", handleResize);
@@ -323,7 +321,7 @@ function InteractiveEcgChart({ data }) {
     // Normal Rhythms
     "NORM": "Your heart is beating in a healthy, regular, and normal rhythm.",
     "SR": "Normal sinus rhythm: Your heart's natural pacemaker is working perfectly.",
-    
+
     // Arrhythmias & Rhythms
     "AFIB": "Atrial fibrillation: An irregular, rapid heartbeat in the upper chambers that can cause fatigue, blood clots, or increase stroke risk.",
     "AFLT": "Atrial flutter: A rapid, organized heartbeat in the upper chambers that makes the heart beat too fast but regularly.",
@@ -333,14 +331,14 @@ function InteractiveEcgChart({ data }) {
     "SVARR": "Supraventricular arrhythmia: An irregular rhythm originating in the upper part of the heart.",
     "SVTAC": "Supraventricular tachycardia: Episodes of a very fast heartbeat originating above the heart's lower chambers.",
     "PSVT": "Sudden, temporary episodes of rapid heartbeats that start and stop abruptly.",
-    
+
     // Premature beats
     "PVC": "Premature ventricular contraction: A common 'extra' heartbeat starting in the lower chambers, often felt as a skipped beat or flutter.",
     "PAC": "Premature atrial contraction: An early, extra heartbeat starting in the upper chambers, usually harmless.",
     "PRC(S)": "Premature complex: Early, extra heartbeats. Typically harmless but worth noting if frequent.",
     "BIGU": "Bigeminy: A pattern where every second heartbeat is an early, extra beat.",
     "TRIGU": "Trigeminy: A pattern where every third heartbeat is an early, extra beat.",
-    
+
     // Heart Attacks & Infarctions (Myocardial Infarction / Injury)
     "AMI": "Anterior myocardial infarction: Signs of a heart attack affecting the front wall of the heart.",
     "ALMI": "Anterolateral myocardial infarction: Signs of a heart attack affecting the front and side walls of the heart.",
@@ -352,7 +350,7 @@ function InteractiveEcgChart({ data }) {
     "ILMI": "Inferolateral myocardial infarction: Signs of a heart attack affecting the bottom and side walls.",
     "IPLMI": "Inferoposterolateral myocardial infarction: Signs of a heart attack affecting the bottom, side, and back walls.",
     "ANEUR": "Ventricular aneurysm: A weakened, bulging area in the heart wall, usually following a past heart attack.",
-    
+
     // Ischemia & Injury (Lack of oxygen/blood flow)
     "ISCAN": "Anterior ischemia: Reduced blood flow and oxygen to the front wall of the heart.",
     "ISCAL": "Anterolateral ischemia: Reduced blood flow and oxygen to the front and side walls of the heart.",
@@ -366,7 +364,7 @@ function InteractiveEcgChart({ data }) {
     "INJIL": "Inferolateral injury: Active lack of blood flow and oxygen in the bottom and side parts of the heart.",
     "INJIN": "Inferior injury: Active lack of blood flow and oxygen in the bottom part of the heart.",
     "INJLA": "Lateral injury: Active lack of blood flow and oxygen in the side part of the heart.",
-    
+
     // Conduction Blocks
     "1AVB": "First-degree heart block: Electrical signals pass from the upper to lower chambers slightly slower than normal. Usually harmless.",
     "2AVB": "Second-degree heart block: Some electrical signals fail to reach the lower chambers, causing skipped beats.",
@@ -379,7 +377,7 @@ function InteractiveEcgChart({ data }) {
     "LPFB": "Left posterior fascicular block: Blockage in the back branch of the left electrical pathway.",
     "IVCD": "Intraventricular conduction delay: A delay in how electrical signals spread through the heart chambers.",
     "WPW": "Wolff-Parkinson-White: An extra electrical pathway that can cause sudden episodes of a very fast heartbeat.",
-    
+
     // Hypertrophy & Enlargement (Thickened muscle/stretched chambers)
     "LVH": "Left ventricular hypertrophy: Enlargement and thickening of the heart's main pumping chamber. Often due to high blood pressure.",
     "RVH": "Right ventricular hypertrophy: Enlargement and thickening of the chamber that pumps blood to the lungs.",
@@ -387,7 +385,7 @@ function InteractiveEcgChart({ data }) {
     "RAO/RAE": "Right atrial enlargement: The right upper chamber of the heart is stretched or overloaded.",
     "SEHYP": "Septal hypertrophy: Thickening of the dividing wall between the heart's lower chambers.",
     "VCLVH": "Voltage criteria for LVH: Electrical signals suggest potential thickening of the main pumping chamber.",
-    
+
     // Electrical Waveform Changes (ST/T changes)
     "STD_": "ST depression: A shift in the electrical signal that can indicate strain or low oxygen in the heart muscle.",
     "STE_": "ST elevation: A shift in the electrical signal that can suggest active heart strain or injury.",
@@ -397,7 +395,7 @@ function InteractiveEcgChart({ data }) {
     "NT_": "Non-specific T-wave changes: Minor electrical variations during heart recovery.",
     "NDT": "T-wave abnormalities that are minor and do not suggest any specific medical condition.",
     "LNGQT": "Long QT interval: It takes longer than normal for your heart's electrical system to recharge between beats.",
-    
+
     // Miscellaneous
     "ABQRS": "Abnormal QRS shape: A general variance in the main electrical contraction wave of the heart.",
     "DIG": "Digitalis effect: Electrical changes caused by taking digoxin, a common heart medication.",
@@ -415,13 +413,13 @@ function InteractiveEcgChart({ data }) {
     const rect = card.getBoundingClientRect();
     let x = e.clientX - rect.left;
     let y = e.clientY - rect.top;
-    
+
     // Bounds check to prevent tooltip from overflowing the card boundary
     const tooltipWidth = 260;
     if (x + tooltipWidth + 30 > rect.width) {
       x = x - tooltipWidth - 25;
     }
-    
+
     setTooltipPos({ x, y });
     setHoveredBar(item);
   };
@@ -441,25 +439,25 @@ function InteractiveEcgChart({ data }) {
             const prob = Number(item.probability) || 0;
             const displayLabel = cleanLabel(item.label, item.code);
             const isNormal = item.code === "NORM" || item.code === "SR";
-            
+
             return (
               <div key={idx} className="ecg-mobile-item-card">
                 <div className="ecg-mobile-header">
                   <span className="ecg-mobile-label">{displayLabel}</span>
                   <span className="ecg-mobile-code-badge">{item.code}</span>
                 </div>
-                
+
                 <div className="ecg-mobile-bar-wrapper">
-                  <div 
-                    className="ecg-mobile-bar" 
-                    style={{ 
+                  <div
+                    className="ecg-mobile-bar"
+                    style={{
                       width: animate ? `${prob}%` : "0%",
                       background: "linear-gradient(90deg, #0284c7, #0ea5e9)",
                       transition: "width 0.8s cubic-bezier(0.16, 1, 0.3, 1)"
                     }}
                   />
                 </div>
-                
+
                 <div className="ecg-mobile-meta">
                   <span className="ecg-mobile-probability">
                     Confidence Probability: <strong>{prob.toFixed(2)}%</strong>
@@ -478,7 +476,7 @@ function InteractiveEcgChart({ data }) {
                     )}
                   </span>
                 </div>
-                
+
                 <div className="ecg-mobile-desc">
                   {scpDescriptions[item.code] || "Automated diagnosis pattern detected from ECG waveforms."}
                 </div>
@@ -504,7 +502,7 @@ function InteractiveEcgChart({ data }) {
               <stop offset="0%" stopColor="#0369a1" />
               <stop offset="100%" stopColor="#0284c7" />
             </linearGradient>
-            
+
             {/* Subtle drop shadow filter for bars */}
             <filter id="ecgBarShadow" x="-10%" y="-10%" width="120%" height="120%">
               <feDropShadow dx="1" dy="1" stdDeviation="1.5" floodOpacity="0.1" />
@@ -568,7 +566,7 @@ function InteractiveEcgChart({ data }) {
             const prob = Number(item.probability) || 0;
             const targetWidth = (prob / maxVal) * chartWidth;
             const currentWidth = animate ? targetWidth : 0;
-            
+
             const isHovered = hoveredBar && hoveredBar.code === item.code;
             const displayLabel = cleanLabel(item.label, item.code);
 
