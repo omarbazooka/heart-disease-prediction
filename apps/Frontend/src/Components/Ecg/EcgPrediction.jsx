@@ -5,8 +5,44 @@ import { useNavigate } from "react-router-dom";
 import "../Prediction/Prediction.css";
 import "./EcgPrediction.css";
 import API_BASE_URL from "../../config";
+import { BsGeoAltFill } from "react-icons/bs";
+import mokhtabarImg from "../../assets/mokhtabar.png";
+import borgImg from "../../assets/borg.png";
+import hassabImg from "../../assets/hassab.png";
+import royalImg from "../../assets/royal.png";
+import shamsImg from "../../assets/shams.png";
+import nileImg from "../../assets/nile.png";
 
 const API = `${API_BASE_URL}/api`;
+
+const labImages = {
+  "Al Mokhtabar labs": mokhtabarImg,
+  "AL Borg Labs": borgImg,
+  "Hassab Labs": hassabImg,
+  "Royal Labs": royalImg,
+  "Al Shams Labs": shamsImg,
+  "Al Nile Labs": nileImg,
+};
+
+const labLinks = {
+  "Al Mokhtabar labs":
+    "https://almokhtabar.com/ar/%d8%a7%d9%84%d9%81%d8%b1%d9%88%d8%b9/",
+
+  "AL Borg Labs":
+    "https://alborglab.com/branches/",
+
+  "Hassab Labs":
+    "https://hassab.com/site/ar/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+
+  "Royal Labs":
+    "https://royal-lab.net/ar/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+
+  "Al Shams Labs":
+    "http://alshamslabs.com/branches.aspx",
+
+  "Al Nile Labs":
+    "https://nilescanandlabs.net/%D9%81%D8%B1%D9%88%D8%B9%D9%86%D8%A7/",
+};
 
 export default function EcgPrediction() {
   const navigate = useNavigate();
@@ -15,6 +51,7 @@ export default function EcgPrediction() {
   const [status, setStatus] = useState(null);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState(null);
+  const [labs, setLabs] = useState([]);
 
   const load = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -45,9 +82,19 @@ export default function EcgPrediction() {
     }
   }, [navigate]);
 
+  const fetchLabs = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/labs`);
+      setLabs(res.data.data);
+    } catch (err) {
+      console.log(err);
+    }
+  }, []);
+
   useEffect(() => {
     load();
-  }, [load]);
+    fetchLabs();
+  }, [load, fetchLabs]);
 
   const handleRunAnalysis = async () => {
     const token = localStorage.getItem("token");
@@ -160,6 +207,40 @@ export default function EcgPrediction() {
             ? "Ask your medical lab to upload your ECG (.dat + .hea) to your national ID."
             : "Use Start ECG to run or refresh AI analysis on your latest recording."}
         </p>
+
+        {!status?.hasEcgTests && (
+          <div className="labs-section">
+            <div className="labs-top">
+              <div>
+                <h3 className="labs-title">Trusted Medical Labs</h3>
+                <p className="labs-sub">There Is Thousands Of Trusted Medical Labs</p>
+              </div>
+            </div>
+            <div className="labs-wrapper">
+              {labs.map((lab) => (
+                <a
+                  key={lab.id}
+                  href={labLinks[lab.name]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="lab-card"
+                >
+                  <img src={labImages[lab.name]} alt={lab.name} className="lab-image" />
+                  <div className="lab-details">
+                    <div className="lab-header">
+                      <h4>{lab.name}</h4>
+                      <span className="lab-rating">⭐ {lab.rating}</span>
+                    </div>
+                    <p className="lab-address">
+                      <BsGeoAltFill />
+                      {lab.address}
+                    </p>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {status?.hasEcgTests && (
           <div className="ecg-actions" style={{ marginTop: "1rem" }}>
