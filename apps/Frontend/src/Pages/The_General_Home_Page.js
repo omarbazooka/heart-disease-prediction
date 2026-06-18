@@ -83,12 +83,8 @@ function Home() {
       navigate("/ecg");
     } catch (err) {
       console.log(err);
-      if (err.response?.data?.code === "NO_ECG" || err.response?.status === 404) {
-        navigate("/ecg");
-      } else {
-        alert(err.response?.data?.message || "ECG analysis failed");
-        navigate("/ecg");
-      }
+      // Always navigate to /ecg — the ECG page will show the correct state
+      navigate("/ecg");
     } finally {
       setEcgLoading(false);
     }
