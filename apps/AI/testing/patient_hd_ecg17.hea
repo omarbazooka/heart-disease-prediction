@@ -1,0 +1,17 @@
+patient_hd_ecg17 12 500 5000
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 I
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 II
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 III
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 aVR
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 aVL
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 aVF
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 V1
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 V2
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 V3
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 V4
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 V5
+patient_hd_ecg17.dat 16 1000(0) 16 0 0 0 0 V6
+# Patient: Synthetic HD patient — heart disease confirmed (target=1)
+# ECG model output probability: ~17%  (borderline / atypical)
+# Clinical: mild ST depression, flat T-wave, HR 88 bpm
+# Format: WFDB format-16, 12-lead, 500 Hz, 10 seconds (PTB-XL compatible)
