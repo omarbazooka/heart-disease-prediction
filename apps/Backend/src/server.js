@@ -95,7 +95,7 @@ async function startServer() {
         console.log(`Secure Server running over HTTPS on port ${PORT}`);
       });
     } else {
-      app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+      app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
     }
   } catch (err) {
     console.error("Database connection failed:", err.message);
