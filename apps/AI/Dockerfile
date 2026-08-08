@@ -1,7 +1,6 @@
-# Trigger build
 FROM python:3.11-slim
 
-# Install system dependencies for WeasyPrint, fonts, and general build tools
+# Install system dependencies for WeasyPrint, fonts, Playwright, and ML packages.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
@@ -22,21 +21,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy python requirements list
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Azure Container Apps is CPU-only for this deployment. Install PyTorch from
+# the official CPU wheel index first so the generic `torch>=2.1.0` requirement
+# is already satisfied and pip does not pull multi-gigabyte CUDA/NVIDIA wheels.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu "torch>=2.1.0" \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Set playwright browser path environment variable and library path
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
 ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Copy the rest of the application files
 COPY . .
 
-# Install Playwright Chromium and its system dependencies
-RUN apt-get update && playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
+# Install Chromium and the OS libraries required by Playwright PDF fallback.
+RUN apt-get update \
+    && playwright install --with-deps chromium \
+    && rm -rf /var/lib/apt/lists/* /root/.cache/pip
 
-# Run the FastAPI app with Uvicorn, dynamically binding to the port specified by Railway
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
