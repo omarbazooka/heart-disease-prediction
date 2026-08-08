@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import requests
 import io
@@ -7,7 +8,13 @@ import matplotlib.pyplot as plt
 
 from services.risk_classifier import assess_risk, RiskAssessment
 
-API_URL = "https://omarbm52-artemis-heart-api.hf.space/predict"
+API_URL = os.getenv(
+    "HEART_MODEL_API_URL",
+    "https://omarbm52-artemis-heart-api.hf.space/predict",
+)
+MODEL_CONNECT_TIMEOUT_SECONDS = float(os.getenv("MODEL_CONNECT_TIMEOUT_SECONDS", "15"))
+MODEL_READ_TIMEOUT_SECONDS = float(os.getenv("MODEL_READ_TIMEOUT_SECONDS", "180"))
+
 
 class MLService:
     def __init__(self):
@@ -54,11 +61,18 @@ class MLService:
         }
 
     def _call_api(self, data: list) -> dict:
-        """Single API call — returns raw JSON response dict."""
+        """Single model API call with bounded connect/read timeouts."""
         payload = self._prepare_payload(data)
-        response = requests.post(API_URL, json=payload)
+        response = requests.post(
+            API_URL,
+            json=payload,
+            timeout=(MODEL_CONNECT_TIMEOUT_SECONDS, MODEL_READ_TIMEOUT_SECONDS),
+        )
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+        if not isinstance(result, dict):
+            raise ValueError("Heart model service returned an invalid response")
+        return result
 
     # ── Binary prediction (0 or 1) ────────────────────────────────────
     def predict_single(self, data: list) -> int:
@@ -67,7 +81,7 @@ class MLService:
             return int(result.get("prediction", 0))
         except Exception as e:
             print("API Error in predict_single:", e)
-            raise e
+            raise
 
     def predict_dataframe(self, df: pd.DataFrame):
         return [self.predict_single(row.tolist()) for _, row in df.iterrows()]
@@ -75,51 +89,51 @@ class MLService:
     # ── Risk + SHAP (legacy — kept for compatibility) ─────────────────
     def get_risk_and_shap(self, data: list):
         """Returns (risk_score_pct, shap_data_dict)."""
-        shap_data = {col: 0.1 for col in self.required_cols}
-        risk_score = 0.0
         try:
             result = self._call_api(data)
             risk_score = float(result.get("probability", 0.0))
-            if "shap_values" in result:
-                shap_data = result["shap_values"]
+            shap_data = self._normalize_shap_dict(result.get("shap_values", {}))
+            return risk_score, shap_data
         except Exception as e:
             print("API Error in get_risk_and_shap:", e)
-        return risk_score, shap_data
+            raise RuntimeError("Heart prediction model service is unavailable") from e
 
-    # ── Full hybrid assessment (NEW — preferred) ──────────────────────
+    # ── Full hybrid assessment (preferred) ────────────────────────────
     def assess_full_prediction(self, data: list, probability: float = None):
         """
         Calculates or retrieves prediction results.
         If probability is provided (as a percentage 0-100), it uses it directly.
         Otherwise, it calls the model API.
+
+        Important: a model/API failure must NEVER be converted into a synthetic
+        low-risk result. The caller should receive an error and can retry safely.
         """
         shap_data = {col: 0.1 for col in self.required_cols}
-        try:
-            if probability is None:
-                # Need fresh prediction from API
+
+        if probability is None:
+            try:
                 result = self._call_api(data)
-                probability_pct = float(result.get("probability", 0.0))
+                probability_pct = float(result["probability"])
                 shap_data = self._normalize_shap_dict(
                     result.get("shap_values", shap_data)
                 )
-            else:
-                # Use existing probability (skip API call)
-                probability_pct = probability
+            except Exception as e:
+                print("Error in assess_full_prediction:", e)
+                raise RuntimeError("Heart prediction model service is unavailable") from e
+        else:
+            probability_pct = float(probability)
 
-            assessment = assess_risk(probability_pct / 100.0)
-        except Exception as e:
-            print("Error in assess_full_prediction:", e)
-            assessment = assess_risk(0.0)   # safe fallback
+        assessment = assess_risk(probability_pct / 100.0)
         shap_data = self._normalize_shap_dict(shap_data)
         return assessment, shap_data
 
     # ── SHAP image generator ──────────────────────────────────────────
     def generate_shap_image(self, shap_data: dict) -> bytes:
-        features   = list(shap_data.keys())
+        features = list(shap_data.keys())
         importance = [abs(v) for v in shap_data.values()]
 
         shap_df = pd.DataFrame({
-            "feature":    features,
+            "feature": features,
             "importance": importance
         }).sort_values(by="importance", ascending=False)
 
