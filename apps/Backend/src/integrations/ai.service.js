@@ -8,10 +8,11 @@ const { logger } = require("../utils/logger");
 
 const baseURL = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
 const internalKey = process.env.INTERNAL_API_KEY || "";
+const requestTimeoutMs = Number(process.env.AI_REQUEST_TIMEOUT_MS) || 300000;
 
 const aiClient = axios.create({
   baseURL,
-  timeout: Number(process.env.AI_REQUEST_TIMEOUT_MS) || 120000,
+  timeout: requestTimeoutMs,
   headers: {
     "Content-Type": "application/json",
   },
@@ -20,7 +21,9 @@ const aiClient = axios.create({
 
 aiClient.interceptors.request.use((config) => {
   if (!internalKey) {
-    throw new Error("INTERNAL_API_KEY is not set on the Node gateway");
+    const err = new Error("INTERNAL_API_KEY is not set on the Node gateway");
+    err.statusCode = 503;
+    throw err;
   }
   config.headers["X-INTERNAL-API-KEY"] = internalKey;
   config.metadata = { start: Date.now() };
@@ -46,9 +49,17 @@ aiClient.interceptors.response.use(
       event: "ai_service_error",
       method: cfg.method,
       path: cfg.url,
+      code: error.code,
       message: error.message,
       duration_ms: ms,
     });
+
+    // Give callers a useful HTTP status instead of collapsing network failures
+    // into an opaque 500 response.
+    if (!error.statusCode) {
+      error.statusCode =
+        error.code === "ECONNABORTED" || error.code === "ETIMEDOUT" ? 504 : 503;
+    }
     return Promise.reject(error);
   }
 );
@@ -145,7 +156,7 @@ async function internalEcgPipeline({ ecgTestId, datBuffer, heaBuffer }) {
     headers: {
       "X-INTERNAL-API-KEY": internalKey,
     },
-    timeout: Number(process.env.AI_REQUEST_TIMEOUT_MS) || 120000,
+    timeout: requestTimeoutMs,
     validateStatus: () => true,
   });
   assertOk(res, "internal ecg pipeline");
@@ -159,7 +170,7 @@ async function internalEcgChartFromTop5(top5, opts = {}) {
     { top_5: top5, compact: !!opts.compact },
     {
       responseType: "arraybuffer",
-      timeout: Number(process.env.AI_REQUEST_TIMEOUT_MS) || 120000,
+      timeout: requestTimeoutMs,
       validateStatus: () => true,
     }
   );
@@ -171,7 +182,7 @@ async function internalEcgChartFromTop5(top5, opts = {}) {
 async function internalEcgReportPdf(payload) {
   const res = await aiClient.post("/internal/ecg/report", payload, {
     responseType: "arraybuffer",
-    timeout: Number(process.env.AI_REQUEST_TIMEOUT_MS) || 120000,
+    timeout: requestTimeoutMs,
     validateStatus: () => true,
   });
   assertOk(res, "internal ecg report");
